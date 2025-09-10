@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  extensions        = [pgvector(map: "vector")]
+}
+
+model User {
+  id                         String    @id @default(cuid())
+  email                      String    @unique
+  firstName                  String    @map("first_name")
+  lastName                   String?   @map("last_name")
+  username                   String
+  password                   String
+  isVerified                 Boolean   @default(false) @map("is_verified")
+  verificationToken          String?   @unique @map("verification_token")
+  verificationTokenExpiresAt DateTime? @map("verification_token_expires_at")
+  createdAt                  DateTime  @default(now())
+
+  transactions Transaction[]
+  documents    Document[]
+
+  @@map("users")
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  url       String?
+  title     String?
+  text      String?
+  source    Source
+  status    Status   @default(QUEUED)
+  createdAt DateTime @default(now())
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  transactions Transaction[]
+
+  artifactId String?
+  artifact   Artifact? @relation(fields: [artifactId], references: [id])
+
+  @@map("documents")
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  options   Json?
+  status    Status   @default(QUEUED)
+  createdAt DateTime @default(now())
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id])
+
+  summary Summary[]
+
+  @@map("transactions")
+}
+
+model Artifact {
+  id        String       @id @default(cuid())
+  kind      ArtifactKind
+  uri       String
+  hash      String       @unique
+  createdAt DateTime     @default(now())
+
+  documents Document[]
+
+  @@map("artifacts")
+}
+
+model Prototype {
+  id        String                     @id @default(cuid())
+  text      String
+  embedding Unsupported("vector(384)")
+  createdAt DateTime                   @default(now())
+
+  @@map("prototypes")
+}
+
+model Summary {
+  id          String      @id @default(cuid())
+  type        SummaryType
+  content     Json
+  artifactUrl String?
+  createdAt   DateTime    @default(now())
+
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+}
+
+enum Source {
+  WEBPAGE
+  PDF
+  YOUTUBE
+  TWITCH
+}
+
+enum ArtifactKind {
+  TEXT
+  HTML
+  PDF
+  AUDIO
+  VIDEO
+  TRANSCRIPT
+}
+
+enum Status {
+  QUEUED
+  PROCESSING
+  INGESTED
+  COMPLETED
+  ERROR
+}
+
+enum SummaryType {
+  BULLET_POINTS
+  PARAGRAPH
+  TLDR
+  QUESTION_ANSWER
+}

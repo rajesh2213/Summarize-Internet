@@ -1,0 +1,175 @@
+const { JSDOM } = require('jsdom');
+const logger = require('../../../config/logHandler');
+const fetchStaticHtml = require('../staticHtmlFetcher');
+const fetchDynamicHtml = require('../dynamicHtmlFetcher');
+const { JsonApiFetcher, StructuredDataExtractor } = require('../site-specific/json-fetchers');
+const { extractMainFromHtml, extractWithReadability } = require('../contextExtractor')
+const { detectSiteType } = require('../guessSiteConfig')
+const { standardizeResult } = require('../commonHandlers')
+const siteConfigs = require('../scoringConfig')
+const Score = require('../Score')
+const ContentStandardizer = require('../ContentStandardize')
+
+const standardizer = new ContentStandardizer();
+const jsonFetcher = new JsonApiFetcher();
+const structuredExtractor = new StructuredDataExtractor();
+
+async function extractWeb(url, options = {}) {
+    try {
+        logger.info(`Starting extraction for: ${url}`);
+
+        logger.info('Fetching static HTML...');
+        let html = await fetchStaticHtml(url);
+
+        const isEmpty = !html || html.length < 200;
+
+        const textOnly = html
+            ? html.replace(/<script[\s\S]*?<\/script>/gi, '')
+                .replace(/<style[\s\S]*?<\/style>/gi, '')
+                .replace(/<[^>]+>/g, '')
+                .trim()
+            : '';
+
+        const textChars = textOnly.length;
+        const density = html ? textChars / html.length : 0;
+
+        const shellIndicators = ['<app-root', '<shreddit-app', '<div id="root"', '<div id="__next"'];
+        const looksLikeShell = html && shellIndicators.some(sig => html.includes(sig));
+
+        if (isEmpty || textChars < 300 || density < 0.05 || looksLikeShell) {
+            logger.info('Static HTML looks insufficient, falling back to dynamic fetch...');
+            html = await fetchDynamicHtml(url);
+        }
+
+        if (!html || html.length < 200) {
+            logger.info('Failed to fetch adequate HTML content');
+        }
+
+        const dom = new JSDOM(html, { url });
+        const document = dom.window.document;
+
+        const tasks = [
+            (async () => {
+                try {
+                    const jsonResult = await jsonFetcher.fetchFromJsonApi(url);
+                    if (jsonResult) {
+                        const standardized = standardizer.standardizeResult(jsonResult, url, 'json_api', 'flatWithRoles', { includeMetadata: true });
+                        logger.info(`[Content extraction] JSON API data extraction successful. Content`, { standardized });
+                        return standardized;
+                    }
+                } catch (error) {
+                    logger.warn('[Content extraction] JSON API extraction failed', { error: error.message });
+                }
+            })(),
+
+            (async () => {
+                try {
+                    const redabilityExtract = await extractWithReadability(document, url);
+                    if (redabilityExtract && redabilityExtract.content) {
+                        const standardized = standardizer.standardizeResult([redabilityExtract], url, 'readability', 'flatWithRoles', { includeMetadata: true });
+                        logger.info(`[Content extraction] Readability data extraction successful. Content`, { standardized });
+                        return standardized;
+                    }
+                } catch (error) {
+                    logger.warn('[Content extraction] Readability data extraction failed', { error: error.message });
+                }
+            })(),
+
+            (async () => {
+                try {
+                    const structuredData = structuredExtractor.extractJsonLd(document);
+                    if (structuredData.length > 0) {
+                        const structured = structuredData.filter(item =>
+                            item.content && item.content.length > 100
+                        );
+                        if (structured) {
+                            const standardized = standardizer.standardizeResult(structured, url, 'structured_data', 'flatWithRoles', { includeMetadata: true });
+                            logger.info(`[Content extraction] Structured data extraction successful. Content: `, { standardized });
+                            return standardized;
+                        }
+                    }
+                } catch (error) {
+                    logger.warn('[Content extraction] Structured data extraction failed', { error: error.message });
+                }
+            })(),
+
+            (async () => {
+                try {
+                    const siteType = detectSiteType(url, document);
+                    const config = {
+                        ...siteConfigs.base,
+                        ...siteConfigs[siteType]
+                    };
+                    logger.info(`Detected site type: ${siteType}`);
+                    const extractedObj = extractMainFromHtml(document, config, url);
+                    if (extractedObj) {
+                        const standardized = standardizer.standardizeResult(extractedObj, url, 'html_parsing', 'flatWithRoles', { includeMetadata: true })
+                        logger.info(`[Content extraction] Heuristic data extraction successful. Content `, { standardized });
+                        return standardized;
+                    }
+                } catch (error) {
+                    logger.warn('[Content extraction] Heuristic data extraction failed', { error: error.message })
+                }
+            })()
+        ]
+
+        const result = await Promise.allSettled(tasks)
+        const candidates = result.filter(r => r.status === 'fulfilled' && r.value)
+            .map(r => r.value)
+
+        if (candidates.length === 0) {
+            logger.error('All extraction methods failed')
+            throw new Error('All extraction methods failed')
+        }
+
+        const scorer = new Score()
+        await scorer.init()
+        const scoredCandidates = [];
+
+        for (const candidate of candidates) {
+            try {
+                const score = await scorer.scoreExtraction(candidate, candidates);
+                scoredCandidates.push({ candidate, score });
+            } catch (err) {
+                logger.warn('Failed to score candidate', { url: candidate.metadata.url, error: err.message });
+            }
+        }
+
+        const bestCandidate = scoredCandidates
+            .sort((a, b) => {
+                if (a.candidate.source === "json_api") return -1;
+                if (b.candidate.source === "json_api") return 1;
+                return b.score - a.score;
+            })[0];
+
+        if (!bestCandidate) {
+            logger.error('No valid candidate after scoring');
+            throw new Error('No valid candidate after scoring');
+        }
+        
+        const { proto, isDuplicate } = await scorer.collector.savePrototype(bestCandidate.candidate.content);
+        if (isDuplicate) {
+            logger.info("Skipping save prototype, prototype similar to the current content already exists", {proto});
+        } else {
+            logger.info("New prototype saved:", {proto});
+        }
+        return bestCandidate.candidate;
+
+    } catch (error) {
+        logger.error("Error extracting web content", { message: error.message, stack: error.stack });
+        return {
+            title: 'Extraction Failed',
+            content: '',
+            author: '',
+            date: '',
+            url,
+            source: 'error',
+            metadata: {
+                error: error.message,
+                extraction_method: 'failed'
+            }
+        };
+    }
+}
+
+module.exports = extractWeb;

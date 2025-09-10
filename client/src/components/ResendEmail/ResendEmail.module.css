@@ -1,0 +1,44 @@
+.resendContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.resendContainer h2 {
+  color: #333;
+  margin-bottom: 0;
+  font-size: 1.5em;
+}
+
+.resendContainer p {
+  color: #666;
+  font-size: 1em;
+  line-height: 1.5;
+}
+
+.resendButton {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.resendButton:hover {
+  background-color: #0056b3;
+}
+
+.resendButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.resendStatus {
+  font-size: 0.9em;
+  font-weight: bold;
+  margin-top: 10px;
+}

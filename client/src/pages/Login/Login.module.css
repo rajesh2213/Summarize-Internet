@@ -1,0 +1,8 @@
+.loginContainer {
+    padding-top: 60px;
+    min-height: calc(100vh - 60px); 
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
