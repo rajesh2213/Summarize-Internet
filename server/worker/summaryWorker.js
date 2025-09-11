@@ -76,7 +76,7 @@ async function claimAndProcessSummarizationJob() {
       return;
     }
 
-    logger.info(`[summarizationWorker] Summarized document ${doc.id}`);
+    logger.info(`[summarizationWorker] Summarized document id: ${doc.id}`, {sumVal: summaryContent});
 
     const summaryRow = await createSummary(
       SummaryType.TLDR,

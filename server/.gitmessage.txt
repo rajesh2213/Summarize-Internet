@@ -1,0 +1,17 @@
+# <type>(<scope>): <short summary>
+# │      │         └─> Summary in imperative mood (max 50 chars)
+# │      └─> Optional: module, package, or layer being changed
+# └─> Type: feat | fix | docs | style | refactor | perf | test | chore | ci | build
+
+# Example:
+# feat(auth): add JWT refresh token rotation
+
+# Body (wrap at 72 characters):
+#
+# Explain *what* and *why* (not just how).
+# Include reasoning, trade-offs, and context.
+#
+# Example:
+# Added retryWithBackoff helper for OpenAI API calls to handle
+# 429 rate-limit errors. Prevents job failures when summarizer
+# worker gets throttled.
