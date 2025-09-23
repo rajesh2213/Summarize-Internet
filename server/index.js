@@ -7,6 +7,7 @@ const passport = require('./config/passport');
 const errorHandler = require('./middlewares/errorHandler')
 const authRouter = require('./routes/auth')
 const summaryRouter = require('./routes/summary')
+const progressRouter = require('./routes/progress')
 
 require('./cron-jobs/purgeLogs')
 require("./cron-jobs/purgeUnverifiedUsers")
@@ -22,6 +23,8 @@ app.use(passport.initialize())
 
 app.use('/api/auth', authRouter)
 app.use('/api/v1', summaryRouter)
+app.use('/api/v1', progressRouter)
+
 app.use(errorHandler)
 
 app.listen(process.env.PORT , () => console.log(`Server is running on port: ${process.env.PORT}`))

@@ -1,0 +1,131 @@
+.progressContainer {
+    margin: 20px 0;
+    width: 100%;
+    max-width: 600px;
+}
+
+.stageLabel {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 16px;
+    color: #2c3e50;
+}
+
+.progressBarOuter {
+    width: 100%;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+.progressBar {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    background: #ffffff;
+    border: 2px solid #cbcfd3;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.297);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.completedFill {
+    height: 100%;
+    background: #667eea;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.currentFill {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    background: linear-gradient(90deg,
+            #667eea 0%,
+            #764ba2 30%,
+            #fa709a 60%,
+            #667eea 100%);
+    background-size: 200% 100%;
+    animation: flow 4s linear infinite;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+
+    clip-path: polygon(0 0,
+            calc(100% - 12px) 0,
+            100% 50%,
+            calc(100% - 12px) 100%,
+            0 100%);
+}
+
+@keyframes flow {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.arrowSeparator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    width: 24px;
+    height: 24px;
+    border-right: 2px solid rgb(235, 225, 225);
+    border-bottom: 2px solid rgb(235, 225, 225);
+    background: none;
+    pointer-events: none;
+}
+
+.stageLabels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.stageLabelItem {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6c757d;
+    text-align: center;
+    flex: 1;
+    position: relative;
+}
+
+@media (max-width: 768px) {
+    .progressContainer {
+        margin: 16px 0;
+    }
+
+    .progressBarOuter {
+        height: 50px;
+        padding: 6px;
+    }
+
+    .segmentLabel {
+        font-size: 10px;
+    }
+
+    .arrowSeparator {
+        border-left-width: 8px;
+        border-top-width: 8px;
+        border-bottom-width: 8px;
+        margin: 0 2px;
+    }
+
+    .arrowSeparator::after {
+        left: -9px;
+        top: -8px;
+        border-left-width: 8px;
+        border-top-width: 8px;
+        border-bottom-width: 8px;
+    }
+}
