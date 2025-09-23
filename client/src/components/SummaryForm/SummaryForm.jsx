@@ -8,15 +8,20 @@ import {useAuth} from '../../contexts/AuthContext'
 const SummaryForm = ({onSubmit}) => {
     const [url, setUrl] = useState('')
     const [errors, setErrors] = useState([])
+    const [isLoading, setIsLoading] = useState(false)
     const auth = useAuth()
 
     const handleChange = (e) => {
         setUrl(e.target.value);
+        if (errors.length > 0) {
+            setErrors([]);
+        }
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setErrors([]);
+        setIsLoading(true);
 
         try{
             const res = await summaryService.postUrl(url, auth)
@@ -26,15 +31,18 @@ const SummaryForm = ({onSubmit}) => {
                 setErrors(errorMessages);
             }else{
                 setErrors([]);
-                onSubmit();
+                onSubmit(data.id, "QUEUED");
             }
         }catch(error){
-            setErrors({ ...errors, server: error.message || "Something went wrong..." })
+            setErrors([error.message || "Something went wrong..."])
             logger.warn(error)
+        } finally {
+            setIsLoading(false);
         }
     }
+
     return(
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className={styles.form}>
             {errors.length > 0 && (
                 <div className={styles.errorContainer}>
                     {errors.map((err, index) => (
@@ -42,21 +50,31 @@ const SummaryForm = ({onSubmit}) => {
                     ))}
                 </div>
             )}
-            <input 
-                type="text" 
-                value={url}
-                onChange={handleChange}
-                placeholder="Paste a link to any webpage, YouTube video, 
-                or even a Twitch livestream and get a summary in seconds"
-                className={styles.input}
+            
+            <div className={styles.inputContainer}>
+                <input 
+                    type="url" 
+                    value={url}
+                    onChange={handleChange}
+                    placeholder="Paste a link to any webpage, YouTube video, or even a Twitch livestream and get a summary in seconds"
+                    className={styles.input}
+                    disabled={isLoading}
+                    required
                 />
-                <button type="submit">Summarize</button>
+            </div>
+            
+            <button 
+                type="submit" 
+                className={`${styles.submitButton} ${isLoading ? styles.loading : ''}`}
+                disabled={isLoading || !url.trim()}
+            >
+                {isLoading ? 'Processing...' : 'Summarize'}
+            </button>
         </form>
     )
-
 }
 
-SummaryForm.prototype = {
+SummaryForm.propTypes = {
     onSubmit: PropTypes.func.isRequired
 }
 
