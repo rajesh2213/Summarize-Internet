@@ -9,6 +9,7 @@ import { useEffect } from 'react'
 import { statusMap } from '../../utils/statusMap'
 import { fetchSummary } from '../../services/summaryService'
 import { useAuth } from '../../contexts/AuthContext'
+import { useSummary } from '../../contexts/SummaryContext'
 import LoadingBar from '../../components/LoadingBar/LoadingBar'
 import logger from '../../utils/logger'
 
@@ -16,11 +17,8 @@ const API = import.meta.env.VITE_API_URL
 
 const Home = () => {
     const { submitted, setSubmitted } = useUI()
+    const { docId, status, summary, error, setDocId, setStatus, setSummary, setError, resetSummaryState } = useSummary()
     const auth = useAuth()
-    const [docId, setDocId] = useState(null)
-    const [status, setStatus] = useState("")
-    const [summary, setSummary] = useState(null)
-    const [error, setError] = useState(null)
     const mainRef = useRef(null)
 
     const scrollToMainContent = () => {
@@ -35,16 +33,8 @@ const Home = () => {
         }
     }
 
-    const resetState = () => {
-        setSubmitted(false);
-        setDocId(null);
-        setStatus("")
-        setSummary(null);
-        setError(null);
-    }
-
     useEffect(() => {
-        resetState()
+        resetSummaryState()
     }, [])
 
     useEffect(() => {
@@ -143,7 +133,7 @@ const Home = () => {
 
     const handleUrlSubmit = (id, stage) => {
         logger.info(`[Home] handleUrlSubmit called with id: ${id}, stage: ${stage}`)
-        resetState()
+        resetSummaryState()
         const mapped = statusMap[stage]
         setDocId(id)
         setStatus(stage)

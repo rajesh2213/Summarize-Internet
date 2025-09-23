@@ -1,12 +1,14 @@
 import {useNavigate, Link} from 'react-router-dom'
 import {useAuth} from '../../contexts/AuthContext.jsx'
 import {useTheme} from '../../contexts/ThemeContext.jsx'
+import {useSummary} from '../../contexts/SummaryContext.jsx'
 import {useState, useEffect} from 'react'
 import logger from '../../utils/logger.js'
 import styles from './Header.module.css'
 
 const Header = () => {
     const auth = useAuth();
+    const { resetSummaryState } = useSummary()
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
@@ -33,6 +35,13 @@ const Header = () => {
 
     const {isAuth, logout, user} = auth;
 
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        })
+    }
+
     const handleLogout = async () => {
         try {
             await logout();
@@ -42,10 +51,18 @@ const Header = () => {
         }
     }
 
+    const handleHomeClick = () => {
+        setIsScrolled(false)
+        resetSummaryState()
+        scrollToTop()
+    }
+
     return (
         <header className={`${styles.header} ${isScrolled ? styles.scrolled : styles.floating}`}>
             <div className={styles.headerContent}>
-                <Link to='/' className={styles.webName}>
+                <Link to='/' 
+                className={styles.webName}
+                onClick={handleHomeClick}> 
                     Summarize-Internet
                 </Link>
                 <nav className={styles.navigation}>

@@ -72,7 +72,18 @@ const Summary = ({ summary }) => {
                 
             case 'youtube':
                 const formattedTimestamps = summary.key_timestamps && Array.isArray(summary.key_timestamps) 
-                    ? summary.key_timestamps.map(ts => `${ts.time} - ${ts.event}`).join('\n')
+                    ? summary.key_timestamps.map(ts => {
+                        if (ts.timestamp || ts.time) {
+                            return `${ts.timestamp || ts.time} - ${ts.event || ts.description || ts.title}`;
+                        }
+                        const keys = Object.keys(ts);
+                        if (keys.length > 0) {
+                            const timestamp = keys[0];
+                            const description = ts[timestamp];
+                            return `${timestamp} - ${description}`;
+                        }
+                        return String(ts);
+                    }).join('\n')
                     : summary.key_timestamps;
                 
                 return [
