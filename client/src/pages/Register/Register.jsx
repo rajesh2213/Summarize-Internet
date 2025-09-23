@@ -90,66 +90,105 @@ const Register = () => {
                     <ResendEmail email={formData.email}/>
                 ) : (
                     <>
-                        <h1>Sign Up</h1>
-                        {errors.server && <span className={styles.error}>{errors.server}</span>}
-                        <form onSubmit={handleRegisterSubmit} >
-                            <label htmlFor="email">Email</label>
-                            <input
-                                type="text"
-                                id='email'
-                                value={formData.email}
-                                onChange={handleChange}
-                            />
-                            {errors.email && <span className={styles.error}>{errors.email}</span>}
+                        <div className={styles.authHeader}>
+                            <h1>Create Account</h1>
+                            <p>Join Summarize-Internet and start your journey</p>
+                        </div>
+                        
+                        {errors.server && <div className={styles.serverError}>{errors.server}</div>}
+                        
+                        <form onSubmit={handleRegisterSubmit} className={styles.authForm}>
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
+                                    <label htmlFor="firstName" className={styles.formLabel}>First Name</label>
+                                    <input
+                                        type="text"
+                                        id='firstName'
+                                        value={formData.firstName}
+                                        onChange={handleChange}
+                                        className={styles.formInput}
+                                        placeholder="Enter your first name"
+                                    />
+                                    {errors.firstName && <span className={styles.fieldError}>{errors.firstName}</span>}
+                                </div>
+                                
+                                <div className={styles.formGroup}>
+                                    <label htmlFor="lastName" className={styles.formLabel}>Last Name</label>
+                                    <input
+                                        type="text"
+                                        id='lastName'
+                                        value={formData.lastName}
+                                        onChange={handleChange}
+                                        className={styles.formInput}
+                                        placeholder="Enter your last name"
+                                    />
+                                    {errors.lastName && <span className={styles.fieldError}>{errors.lastName}</span>}
+                                </div>
+                            </div>
 
-                            <label htmlFor="firstName">First Name</label>
-                            <input
-                                type="text"
-                                id='firstName'
-                                value={formData.firstName}
-                                onChange={handleChange}
-                            />
-                            {errors.firstName && <span className={styles.error}>{errors.firstName}</span>}
+                            <div className={styles.formGroup}>
+                                <label htmlFor="email" className={styles.formLabel}>Email Address</label>
+                                <input
+                                    type="email"
+                                    id='email'
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className={styles.formInput}
+                                    placeholder="Enter your email"
+                                />
+                                {errors.email && <span className={styles.fieldError}>{errors.email}</span>}
+                            </div>
 
-                            <label htmlFor="lastName">Last Name</label>
-                            <input
-                                type="text"
-                                id='lastName'
-                                value={formData.lastName}
-                                onChange={handleChange}
-                            />
-                            {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
+                            <div className={styles.formGroup}>
+                                <label htmlFor="username" className={styles.formLabel}>Username</label>
+                                <input
+                                    type="text"
+                                    id='username'
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    className={styles.formInput}
+                                    placeholder="Choose a username"
+                                />
+                                {errors.username && <span className={styles.fieldError}>{errors.username}</span>}
+                            </div>
 
-                            <label htmlFor="username">Username</label>
-                            <input
-                                type="text"
-                                id='username'
-                                value={formData.username}
-                                onChange={handleChange}
-                            />
-                            {errors.username && <span className={styles.error}>{errors.username}</span>}
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
+                                    <label htmlFor="password" className={styles.formLabel}>Password</label>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className={styles.formInput}
+                                        placeholder="Create a password"
+                                        autoComplete="new-password"
+                                    />
+                                    {errors.password && <span className={styles.fieldError}>{errors.password}</span>}
+                                </div>
+                                
+                                <div className={styles.formGroup}>
+                                    <label htmlFor="confirmPassword" className={styles.formLabel}>Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        id="confirmPassword"
+                                        value={formData.confirmPassword}
+                                        onChange={handleChange}
+                                        className={styles.formInput}
+                                        placeholder="Confirm your password"
+                                    />
+                                    {errors.confirmPassword && <span className={styles.fieldError}>{errors.confirmPassword}</span>}
+                                </div>
+                            </div>
 
-                            <label htmlFor="password">Password</label>
-                            <input
-                                type="password"
-                                id="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                autoComplete="new-password"
-                            />
-                            {errors.password && <span className={styles.error}>{errors.password}</span>}
-
-                            <label htmlFor="confirmPassword">Confirm Password</label>
-                            <input
-                                type="password"
-                                id="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                            />
-                            {errors.confirmPassword && <span className={styles.error}>{errors.confirmPassword}</span>}
-
-                            <button type="submit">Register</button>
+                            <button type="submit" className={styles.submitButton}>
+                                Create Account
+                            </button>
                         </form>
+                        
+                        <div className={styles.authFooter}>
+                            <p>Already have an account? <a href="/login" className={styles.authLink}>Sign in</a></p>
+                        </div>
                     </>
                 )}
             </div>
