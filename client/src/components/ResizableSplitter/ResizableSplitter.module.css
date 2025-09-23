@@ -16,13 +16,13 @@
 .panel {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   transition: none;
 }
 
 .splitter {
   position: relative;
   display: flex;
+  padding: .4rem;
   align-items: center;
   justify-content: center;
   background: transparent;
@@ -83,7 +83,6 @@
   transform: scale(1.4);
 }
 
-/* Dark mode styles */
 [data-theme="dark"] .splitterGrip {
   background: #94a3b8;
 }
@@ -96,7 +95,6 @@
   background: #3b82f6;
 }
 
-/* Responsive behavior */
 @media (max-width: 1024px) {
   .container.horizontal {
     flex-direction: column;
@@ -129,12 +127,10 @@
   }
 }
 
-/* Animation for smooth transitions */
 .panel {
   transition: width 0.1s ease-out, height 0.1s ease-out;
 }
 
-/* Focus styles for accessibility */
 .splitter:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
@@ -145,7 +141,6 @@
   outline-offset: 2px;
 }
 
-/* High contrast mode support */
 @media (prefers-contrast: high) {
   .splitterGrip {
     background: #000;
@@ -158,7 +153,6 @@
   }
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .splitter,
   .splitterHandle,
