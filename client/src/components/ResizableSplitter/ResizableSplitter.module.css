@@ -1,0 +1,169 @@
+.container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.container.horizontal {
+  flex-direction: row;
+}
+
+.container.vertical {
+  flex-direction: column;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: none;
+}
+
+.splitter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: col-resize;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.splitter.horizontal {
+  width: 8px;
+  min-width: 8px;
+  cursor: col-resize;
+}
+
+.splitter.vertical {
+  height: 8px;
+  min-height: 8px;
+  cursor: row-resize;
+}
+
+.splitter:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.splitter:active {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.splitterHandle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.splitter:hover .splitterHandle {
+  opacity: 1;
+}
+
+.splitterGrip {
+  width: 3px;
+  height: 3px;
+  background: #64748b;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.splitter:hover .splitterGrip {
+  background: #3b82f6;
+  transform: scale(1.2);
+}
+
+.splitter:active .splitterGrip {
+  background: #1d4ed8;
+  transform: scale(1.4);
+}
+
+/* Dark mode styles */
+[data-theme="dark"] .splitterGrip {
+  background: #94a3b8;
+}
+
+[data-theme="dark"] .splitter:hover .splitterGrip {
+  background: #60a5fa;
+}
+
+[data-theme="dark"] .splitter:active .splitterGrip {
+  background: #3b82f6;
+}
+
+/* Responsive behavior */
+@media (max-width: 1024px) {
+  .container.horizontal {
+    flex-direction: column;
+  }
+  
+  .splitter.horizontal {
+    width: 100%;
+    height: 8px;
+    cursor: row-resize;
+  }
+  
+  .splitterHandle {
+    flex-direction: row;
+  }
+  
+  .splitterGrip {
+    width: 3px;
+    height: 3px;
+  }
+}
+
+@media (max-width: 768px) {
+  .splitter {
+    display: none;
+  }
+  
+  .panel {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* Animation for smooth transitions */
+.panel {
+  transition: width 0.1s ease-out, height 0.1s ease-out;
+}
+
+/* Focus styles for accessibility */
+.splitter:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.splitter:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .splitterGrip {
+    background: #000;
+    border: 1px solid #fff;
+  }
+  
+  .splitter:hover .splitterGrip {
+    background: #fff;
+    border: 1px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .splitter,
+  .splitterHandle,
+  .splitterGrip,
+  .panel {
+    transition: none;
+  }
+}

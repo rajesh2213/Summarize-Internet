@@ -1,0 +1,84 @@
+.typewriterContainer {
+  width: 100%;
+  min-height: 2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.typewriterText {
+  font-family: "SUSE Mono", monospace;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1.2em;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #fa709a 100%);
+  margin-left: 3px;
+  animation: blink 1.2s infinite, pulse 2s infinite;
+  vertical-align: baseline;
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(102, 126, 234, 0.6);
+  }
+}
+
+[data-theme="dark"] .cursor {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #3b82f6 100%);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+}
+
+[data-theme="dark"] .cursor {
+  animation: blink 1.2s infinite, pulseDark 2s infinite;
+}
+
+@keyframes pulseDark {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.7);
+  }
+}
+
+@media (max-width: 768px) {
+  .typewriterText {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+}

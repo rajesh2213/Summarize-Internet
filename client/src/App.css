@@ -4,6 +4,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* outline: 1px solid red; */
 }
 
 body {
@@ -19,7 +20,7 @@ body {
 }
 
 .main-content {
-  margin-top: 60px; /* Same as header height */
+  margin-top: 60px; 
   flex: 1;
   width: 100%;
 }
