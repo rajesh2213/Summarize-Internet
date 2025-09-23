@@ -4,6 +4,7 @@ import { useUI } from '../../contexts/UIContext'
 import SummaryForm from '../../components/SummaryForm/SummaryForm'
 import Summary from '../../components/Summary/Summary'
 import ResizableSplitter from '../../components/ResizableSplitter/ResizableSplitter'
+import Footer from '../../components/Footer/Footer'
 import { useEffect } from 'react'
 import { statusMap } from '../../utils/statusMap'
 import { fetchSummary } from '../../services/summaryService'
@@ -150,60 +151,64 @@ const Home = () => {
     }
 
     return (
-        <div className={styles.homeContainer}>
-            <div className={styles.intro}>
-                <h1>Summarize-Internet</h1>
-                <h3>Your personal AI summary engine. Focus on what matters, we'll handle the rest</h3>
-            </div>
-            
-            <div ref={mainRef} className={`${styles.mainContent} ${summary ? styles.summaryPresent : ''}`}>
-                <ResizableSplitter 
-                    initialSize={60}
-                    minSize={30}
-                    maxSize={80}
-                    direction="horizontal"
-                    className={styles.splitterContainer}
-                >
-                    <div className={styles.leftSection}>
-                        <div className={`${styles.summaryConatiner} ${summary ? styles.summaryPresent : ''}`}>
-                            {!submitted && (
-                                <SummaryForm onSubmit={handleUrlSubmit} />
-                            )}
-
-                            {error && (
-                                <div className={styles.errorBox}>
-                                    <p>{error}</p>
+        <>
+            <div className={styles.homeContainer}>
+                <div className={styles.intro}>
+                    <h1>Summarize-Internet</h1>
+                    <h3>Your personal AI summary engine. Focus on what matters, we'll handle the rest</h3>
+                </div>
+                
+                <div ref={mainRef} className={`${styles.mainContent} ${summary ? styles.summaryPresent : ''}`}>
+                    <ResizableSplitter 
+                        initialSize={50}
+                        minSize={30}
+                        maxSize={80}
+                        direction="horizontal"
+                        className={styles.splitterContainer}
+                    >
+                        <div className={styles.leftSection}>
+                            <div className={`${styles.summaryConatiner} ${summary ? styles.summaryPresent : ''}`}>
+                                {!submitted && (
                                     <SummaryForm onSubmit={handleUrlSubmit} />
-                                </div>
-                            )}
+                                )}
 
-                            {summary && (
-                                <div className={styles.summaryBox}>
-                                    <h4>Summary</h4>
-                                    <Summary summary={summary} />
-                                </div>
-                            )}
+                                {error && (
+                                    <div className={styles.errorBox}>
+                                        <p>{error}</p>
+                                        <SummaryForm onSubmit={handleUrlSubmit} />
+                                    </div>
+                                )}
 
-                            {submitted && !summary && !error && (
-                                <LoadingBar
-                                    id={docId}
-                                    status={status}
-                                />
-                            )}
-                        </div>
-                    </div>
+                                {summary && (
+                                    <div className={styles.summaryBox}>
+                                        <h4>Summary</h4>
+                                        <Summary summary={summary} />
+                                    </div>
+                                )}
 
-                    <div className={styles.rightSection}>
-                        <div className={`${styles.tutorialPlaceholder} ${summary ? styles.summaryPresent : ''}`}>
-                            <div className={styles.placeholderContent}>
-                                <div className={styles.placeholderIcon}>🎥</div>
-                                <h4>Tutorial</h4>
+                                {submitted && !summary && !error && (
+                                    <LoadingBar
+                                        id={docId}
+                                        status={status}
+                                    />
+                                )}
                             </div>
                         </div>
-                    </div>
-                </ResizableSplitter>
+
+                        <div className={styles.rightSection}>
+                            <div className={`${styles.tutorialPlaceholder} ${summary ? styles.summaryPresent : ''}`}>
+                                <div className={styles.placeholderContent}>
+                                    <div className={styles.placeholderIcon}>🎥</div>
+                                    <h4>Tutorial</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </ResizableSplitter>
+                </div>
             </div>
-        </div>
+            
+            <Footer />
+        </>
     )
 }
 
