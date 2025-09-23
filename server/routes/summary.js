@@ -10,4 +10,6 @@ summaryRoute.post('/summarize', [
         .isURL().withMessage("Please provide a valid URL.")
 ], validationHandler, checkAuthentication(false), summaryController.postSummaryRequest)
 
+summaryRoute.get('/summary/:docId', checkAuthentication(false), summaryController.getSummary)
+
 module.exports = summaryRoute

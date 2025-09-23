@@ -1,5 +1,6 @@
 const prisma = require('../config/prismaClient')
 const logger = require('../config/logHandler')
+const notifier = require('../services/notifier')
 
 const createDocumet = async (url, source, userId) => {
     try {
@@ -10,9 +11,10 @@ const createDocumet = async (url, source, userId) => {
                 userId
             }
         })
-        await prisma.$executeRawUnsafe(
-            `NOTIFY new_document, '${JSON.stringify({ id: doc.id })}'`
-        );
+        // await prisma.$executeRawUnsafe(
+        //     `NOTIFY new_document, '${JSON.stringify({ id: doc.id })}'`
+        // );
+        await notifier.notifyNewDoc(doc.id)
         return doc
     } catch (error) {
         logger.error('Error creating document:', error);
