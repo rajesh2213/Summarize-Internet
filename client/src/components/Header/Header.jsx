@@ -1,15 +1,29 @@
 import {useNavigate, Link} from 'react-router-dom'
 import {useAuth} from '../../contexts/AuthContext.jsx'
+import {useTheme} from '../../contexts/ThemeContext.jsx'
+import {useState, useEffect} from 'react'
 import logger from '../../utils/logger.js'
 import styles from './Header.module.css'
 
 const Header = () => {
     const auth = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollTop = window.scrollY;
+            setIsScrolled(scrollTop > 50);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     if (!auth) {
         return (
-            <header className={styles.header}>
+            <header className={`${styles.header} ${isScrolled ? styles.scrolled : styles.floating}`}>
                 <div className={styles.headerContent}>
                     <span className={styles.webName}>Loading...</span>
                 </div>
@@ -29,21 +43,24 @@ const Header = () => {
     }
 
     return (
-        <header className={styles.header}>
+        <header className={`${styles.header} ${isScrolled ? styles.scrolled : styles.floating}`}>
             <div className={styles.headerContent}>
                 <Link to='/' className={styles.webName}>
                     Summarize-Internet
                 </Link>
                 <nav className={styles.navigation}>
+                    <button onClick={toggleTheme} className={styles.themeToggle}>
+                        {theme === 'light' ? '🌙' : '☀️'}
+                    </button>
                     {isAuth ? (
                         <>
                             <p className={styles.welcomeText}>Hi, {user?.username}</p>
-                            <button onClick={handleLogout}>Logout</button>
+                            <button onClick={handleLogout}><span>Logout</span></button>
                         </>
                     ) : (
                         <>
-                            <button onClick={() => navigate("/login")}>Log in</button>
-                            <button onClick={() => navigate("/register")}>Sign up for free</button>
+                            <button onClick={() => navigate("/login")}><span>Log in</span></button>
+                            <button onClick={() => navigate("/register")}><span>Sign up for free</span></button>
                         </>
                     )}
                 </nav>
