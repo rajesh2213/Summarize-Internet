@@ -59,31 +59,48 @@ const Login = () => {
     return (
         <div className={styles.loginPage}>
             <div className={styles.loginContainer}>
-                <h1>Login</h1>
-                {errors.server && <span className={styles.error}>{errors.server}</span>}
-                <form onSubmit={handleLoginSubmit}>
-                    <div>
-                        <label htmlFor="email">Email</label>
+                <div className={styles.authHeader}>
+                    <h1>Welcome Back</h1>
+                    <p>Sign in to your account to continue</p>
+                </div>
+                
+                {errors.server && <div className={styles.serverError}>{errors.server}</div>}
+                
+                <form onSubmit={handleLoginSubmit} className={styles.authForm}>
+                    <div className={styles.formGroup}>
+                        <label htmlFor="email" className={styles.formLabel}>Email Address</label>
                         <input
-                            type='text'
+                            type='email'
                             id='email'
                             value={formData.email}
                             onChange={handleChange}
+                            className={styles.formInput}
+                            placeholder="Enter your email"
                         />
-                        {errors.email && <span className={styles.error}>{errors.email}</span>}
+                        {errors.email && <span className={styles.fieldError}>{errors.email}</span>}
                     </div>
-                    <div>
-                        <label htmlFor="password">Password</label>
+                    
+                    <div className={styles.formGroup}>
+                        <label htmlFor="password" className={styles.formLabel}>Password</label>
                         <input
                             type='password'
                             id='password'
                             value={formData.password}
                             onChange={handleChange}
+                            className={styles.formInput}
+                            placeholder="Enter your password"
                         />
-                        {errors.password && <span>{errors.password}</span>}
-                        <button type='submit'>Continue</button>
+                        {errors.password && <span className={styles.fieldError}>{errors.password}</span>}
                     </div>
+                    
+                    <button type='submit' className={styles.submitButton}>
+                        Sign In
+                    </button>
                 </form>
+                
+                <div className={styles.authFooter}>
+                    <p>Don't have an account? <a href="/register" className={styles.authLink}>Sign up</a></p>
+                </div>
             </div>
         </div>
     )
