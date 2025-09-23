@@ -24,6 +24,8 @@ const runPipeline = async (job) => {
         }
         logger.info("Document status updated", { documentId: artifactRow.documentId });
 
+        await notifier.notifyProgress(jobId, "SUMMARIZING")
+        
         const summarizedContent = await summarizer.summarize(artifactRow.content);
         if (!summarizedContent) {
             throw new Error("Summarization returned empty content");

@@ -9,16 +9,18 @@ const { standardizeResult } = require('../commonHandlers')
 const siteConfigs = require('../scoringConfig')
 const Score = require('../Score')
 const ContentStandardizer = require('../ContentStandardize')
+const notifier = require('../../notifier')
 
 const standardizer = new ContentStandardizer();
 const jsonFetcher = new JsonApiFetcher();
 const structuredExtractor = new StructuredDataExtractor();
 
-async function extractWeb(url, options = {}) {
+async function extractWeb(jobId, url, options = {}) {
     try {
         logger.info(`Starting extraction for: ${url}`);
 
         logger.info('Fetching static HTML...');
+        await notifier.notifyProgress(jobId, "FETCHING_HTML")
         let html = await fetchStaticHtml(url);
 
         const isEmpty = !html || html.length < 200;
@@ -121,7 +123,7 @@ async function extractWeb(url, options = {}) {
             logger.error('All extraction methods failed')
             throw new Error('All extraction methods failed')
         }
-
+        await notifier.notifyProgress(jobId, "CLEANING")
         const scorer = new Score()
         await scorer.init()
         const scoredCandidates = [];

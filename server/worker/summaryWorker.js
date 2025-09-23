@@ -6,6 +6,7 @@ const { getArtifactWithDocId, getArtifactContent } = require('../services/artifa
 const { Status, SummaryType } = require('../generated/prisma');
 const { updateDocumentStatus } = require('../services/documentService');
 const { initListener } = require('../config/pgListener');
+const notifier = require('../services/notifier')
 
 const summarizer = new ContentSummarizer();
 const FALLBACK_INTERVAL = 5 * 60 * 1000;
@@ -62,22 +63,23 @@ async function claimAndProcessSummarizationJob() {
       logger.error("[summarizationWorker] No artifact found for document", { docId: doc.id });
       await updateTransactionStatus(tx.id, Status.ERROR);
       await updateDocumentStatus(doc.id, Status.ERROR);
+      await notifier.notifyProgress(doc.id, "ERROR")
       return;
     }
     const artifactContent = await getArtifactContent(artifact.uri);
-
-    //const summaryContent = await summarizer.summarize(artifactContent);
+    await notifier.notifyProgress(doc.id, "SUMMARIZING")
     const summaryContent = await retryWithBackoff(() => summarizer.summarize(artifactContent));
     
     if (!summaryContent) {
       logger.warn(`[summarizationWorker] Summary failed but continuing gracefully for doc ${doc.id}`);
       await updateTransactionStatus(tx.id, Status.ERROR);
       await updateDocumentStatus(doc.id, Status.ERROR);
+      await notifier.notifyProgress(doc.id, "ERROR")
       return;
     }
 
     logger.info(`[summarizationWorker] Summarized document id: ${doc.id}`, {sumVal: summaryContent});
-
+    await notifier.notifyProgress(doc.id, "FINALIZING")
     const summaryRow = await createSummary(
       SummaryType.TLDR,
       summaryContent,
@@ -88,15 +90,18 @@ async function claimAndProcessSummarizationJob() {
     if (summaryRow) {
       await updateTransactionStatus(tx.id, Status.COMPLETED);
       await updateDocumentStatus(doc.id, Status.COMPLETED);
+      await notifier.notifyProgress(doc.id, "COMPLETED", { summary: summaryContent })
       logger.info(`[summarizationWorker] Completed document ${doc.id}`);
     } else {
       await updateTransactionStatus(tx.id, Status.ERROR);
       await updateDocumentStatus(doc.id, Status.ERROR);
+      await notifier.notifyProgress(doc.id, "ERROR")
     }
   } catch (err) {
     logger.error("[summarizationWorker] Summarization failed", { docId: doc.id, errMessage: err.message, errStack: err.stack });
     await updateTransactionStatus(tx.id, Status.ERROR);
     await updateDocumentStatus(doc.id, Status.ERROR);
+    await notifier.notifyProgress(doc.id, "ERROR")
   }
 }
 

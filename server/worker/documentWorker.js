@@ -4,6 +4,7 @@ const { Status } = require('../generated/prisma');
 const { updateDocumentStatus } = require('../services/documentService');
 const ingest = require('../services/pipeline/ingest');
 const logger = require('../config/logHandler');
+const notifier = require('../services/notifier')
 
 const FALLBACK_INTERVAL = 5 * 60 * 1000;
 
@@ -39,9 +40,7 @@ async function claimAndProcessJob() {
             logger.info(`[documentWorker] Updated doc status for docId: ${updateDoc.id}`);
             if (updateDoc) {
                 logger.info(`[documentWorker] Trigerring ingested_doc event for docId: ${updateDoc.id}`);
-                await prisma.$executeRawUnsafe(
-                    `NOTIFY ingested_doc, '${JSON.stringify({ id: updateDoc.id })}'`
-                );
+                await notifier.notifyIngestedDoc(updateDoc.id)
             }
         } else {
             await updateDocumentStatus(job.id, Status.ERROR);
@@ -49,6 +48,7 @@ async function claimAndProcessJob() {
     } catch (err) {
         logger.error("[documentWorker] Ingest failed", { jobId: job.id, errMessage: err.message, errStack: err.stack });
         await updateDocumentStatus(job.id, Status.ERROR);
+        await notifier.notifyProgress(job.id, "ERROR")
     }
 }
 
