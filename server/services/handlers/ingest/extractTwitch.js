@@ -3,6 +3,7 @@ require('dotenv').config()
 const { spawn } = require('child_process');
 const extractWeb = require('./extractWeb')
 const ContentStandardizer = require('../ContentStandardize')
+const cacheService = require('../../cacheService')
 
 const standardizer = new ContentStandardizer();
 let twitchTokenCache = { token: null, expiry: 0 };
@@ -95,11 +96,22 @@ async function extractTwitch(url) {
     }
     try {
         if (isVod) {
-            const [metaResp, chatMessages] = await Promise.all([
-                fetchTwitchData('videos', { id: videoId }),
-                fetchChat(videoId)
-            ])
-            const item = metaResp.data?.[0]
+            let item = null;
+            const cachedVodData = await cacheService.getCachedTwitchData(videoId);
+            if (cachedVodData) {
+                logger.info("[Twitch] Using cached VOD data for video:", videoId);
+                item = cachedVodData;
+            } else {
+                const metaResp = await fetchTwitchData('videos', { id: videoId });
+                item = metaResp.data?.[0];
+                
+                if (item) {
+                    await cacheService.cacheTwitchData(videoId, item);
+                    logger.info("[Twitch] Cached VOD data for video:", videoId);
+                }
+            }
+            
+            const chatMessages = await fetchChat(videoId);
             if (!item) {
                 logger.error("No twitch vodeo found")
                 throw new Error("No twitch video found")

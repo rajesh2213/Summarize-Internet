@@ -215,10 +215,6 @@ function computeScoreAndCollect(node, config, candidates) {
 function extractMainFromHtml(document, config, url) {
     const allCandidates = [];
 
-    const docPreview = (document.body || document.documentElement).textContent
-        .slice(0, 300).replace(/\s+/g, ' ');
-    logger.info('[Heuristic] Document preview', { url, preview: docPreview });
-
     const defaultSelectors = [
         'article', 'main', '[role="main"]',
         '.article', '.story', '.story-body', '.articleBody',
@@ -240,7 +236,6 @@ function extractMainFromHtml(document, config, url) {
         previews: selectorResults.slice(0, 3).map(r => ({
             len: r.text.length,
             score: Math.round(r.score),
-            preview: r.text.slice(0, 160).replace(/\s+/g, ' ')
         }))
     });
     allCandidates.push(...selectorResults);
@@ -260,7 +255,6 @@ function extractMainFromHtml(document, config, url) {
         previews: topScoring.slice(0, 5).map(c => ({
             len: c.text.length,
             score: Math.round(c.score),
-            preview: c.text.slice(0, 160).replace(/\s+/g, ' ')
         }))
     });
     allCandidates.push(...topScoring);
@@ -289,13 +283,11 @@ function extractMainFromHtml(document, config, url) {
         logger.info('[Heuristic] Using fallback best-single candidate', {
             url,
             len: content.length,
-            preview: content.slice(0, 200).replace(/\s+/g, ' ')
         });
     } else {
         logger.info('[Heuristic] Merged content summary', {
             url,
             len: content.length,
-            preview: content.slice(0, 200).replace(/\s+/g, ' ')
         });
     }
 

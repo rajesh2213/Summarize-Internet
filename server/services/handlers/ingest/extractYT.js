@@ -6,6 +6,7 @@ const { secondsToMins, sanitizeFinalText } = require('../commonHandlers')
 const extractWeb = require('./extractWeb')
 const ContentStandardizer = require('../ContentStandardize')
 const notifier = require('../../notifier')
+const cacheService = require('../../cacheService')
 
 const standardizer = new ContentStandardizer();
 
@@ -62,12 +63,22 @@ async function extractYT(jobId, url) {
             logger.warn("No transcripts available");
         }
 
-        const metaResp = await youtube.videos.list({
-            part: ['snippet', 'statistics', 'contentDetails'],
-            id: [videoId],
-            key: process.env.YOUTUBE_API_KEY,
-        });
-        const item = metaResp.data.items?.[0] ?? {};
+        let item = {};
+        const cachedMetadata = await cacheService.getCachedYouTubeData(videoId);
+        if (cachedMetadata) {
+            logger.info("[YouTube] Using cached metadata for video:", videoId);
+            item = cachedMetadata;
+        } else {
+            const metaResp = await youtube.videos.list({
+                part: ['snippet', 'statistics', 'contentDetails'],
+                id: [videoId],
+                key: process.env.YOUTUBE_API_KEY,
+            });
+            item = metaResp.data.items?.[0] ?? {};
+            
+            await cacheService.cacheYouTubeData(videoId, item);
+            logger.info("[YouTube] Cached metadata for video:", videoId);
+        }
         const meta = {
             title: item.snippet?.title,
             description: item.snippet?.description,

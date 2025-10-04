@@ -4,7 +4,8 @@ const { Status } = require('../generated/prisma');
 const { updateDocumentStatus } = require('../services/documentService');
 const ingest = require('../services/pipeline/ingest');
 const logger = require('../config/logHandler');
-const notifier = require('../services/notifier')
+const notifier = require('../services/notifier');
+const redisClient = require('../config/redisClient');
 
 const FALLBACK_INTERVAL = 5 * 60 * 1000;
 
@@ -34,7 +35,7 @@ async function claimAndProcessJob() {
     try {
         logger.info(`[documentWorker] Processing ${job.id}`);
         const artifact = await ingest(job);
-        logger.info(`[documentWorker] document ingested`, { artifact });
+        logger.info(`[documentWorker] document ingested`);
         if (artifact?.uri) {
             const updateDoc = await updateDocumentStatus(job.id, Status.INGESTED);
             logger.info(`[documentWorker] Updated doc status for docId: ${updateDoc.id}`);
@@ -53,6 +54,13 @@ async function claimAndProcessJob() {
 }
 
 async function documentWorkerLoop() {
+    try {
+        await redisClient.connect();
+        logger.info('[documentWorker] Redis connected successfully');
+    } catch (error) {
+        logger.error('[documentWorker] Failed to connect to Redis:', error);
+    }
+
     await initListener('new_document', async (payload) => {
         logger.info(`[documentWorker] Notification received for document ${payload.id}`);
         await claimAndProcessJob();

@@ -1,5 +1,6 @@
 const { resolve } = require('path');
 const logger = require('../../../config/logHandler');
+const cacheService = require('../../cacheService');
 
 class JsonApiFetcher {
   constructor() {
@@ -75,6 +76,13 @@ class JsonApiFetcher {
   }
 
   async fetchReddit(url, maxRetries = 3, initialDelay = 2000) {
+    const urlHash = require('crypto').createHash('sha256').update(url).digest('hex');
+    const cachedData = await cacheService.getCachedRedditData(urlHash);
+    if (cachedData) {
+      logger.info("[Reddit] Using cached data for URL:", url);
+      return cachedData;
+    }
+
     let attempt = 0;
     let delay = initialDelay;
 
@@ -108,9 +116,9 @@ class JsonApiFetcher {
           }
         }
 
-        // Subreddit listing (multiple posts)
+        // multiple posts
         const posts = data?.data?.children || [];
-        return posts.map(p => ({
+        const result = posts.map(p => ({
           title: p.data.title || '',
           content: p.data.selftext || p.data.title || '',
           author: p.data.author || '',
@@ -119,6 +127,10 @@ class JsonApiFetcher {
           score: p.data.score || 0,
           comments: []
         }));
+
+        await cacheService.cacheRedditData(urlHash, result);
+        logger.info("[Reddit] Cached data for URL:", url);
+        return result;
 
       } catch (error) {
         attempt++;

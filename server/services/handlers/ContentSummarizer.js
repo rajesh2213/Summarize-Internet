@@ -2,6 +2,7 @@ require('dotenv').config();
 const logger = require('../../config/logHandler');
 const OpenAI = require('openai');
 const { encoding_for_model } = require("tiktoken");
+const cacheService = require('../cacheService');
 
 class ContentSummarizer {
     constructor(options = {}) {
@@ -58,6 +59,13 @@ class ContentSummarizer {
     }
 
     async summarizeChunks(content, model = this.defaultModel) {
+        const cacheOptions = { model, temperature: 0.3, chunkSize: this.chunkSize };
+        const cachedResult = await cacheService.getCachedAIChunk(content, cacheOptions);
+        if (cachedResult) {
+            logger.info("[ContentSummarizer] Using cached chunk summary");
+            return cachedResult;
+        }
+
         const prompt = `
         You are an expert assistant that summarizes arbitrary webpage content.
 
@@ -99,6 +107,10 @@ class ContentSummarizer {
                 logger.warn("[ContentSummarizer] Failed to parse JSON, raw content returned", { raw: res.choices[0].message.content });
                 return null;
             }
+            
+            await cacheService.cacheAIChunk(content, parsed, cacheOptions);
+            logger.info("[ContentSummarizer] Cached chunk summary");
+            
             return parsed;
         } catch (err) {
             logger.error("[ContentSummarizer] summarizeChunks failed", { errMessage: err.message, errStack: err.stack });
@@ -165,6 +177,13 @@ class ContentSummarizer {
             const model = options.model || this.defaultModel;
             const temperature = options.temperature || this.temperature;
 
+            const cacheOptions = { model, temperature, chunkSize: this.chunkSize };
+            const cachedSummary = await cacheService.getCachedAISummary(inputText, cacheOptions);
+            if (cachedSummary) {
+                logger.info("[ContentSummarizer] Using cached full summary");
+                return cachedSummary;
+            }
+
             const chunks = this.splitIntoChunks(inputText);
             const partials = await Promise.all(
                 chunks.map(chunk => this.summarizeChunks(chunk))
@@ -173,6 +192,10 @@ class ContentSummarizer {
             if (partials.every(p => p === null)) return null;
 
             const resultContent = await this.mergeSummaries(partials.filter(p => p !== null), model, temperature);
+            
+            await cacheService.cacheAISummary(inputText, resultContent, cacheOptions);
+            logger.info("[ContentSummarizer] Cached full summary");
+            
             logger.info("[ContentSummarizer] Result summary content", { resultContent })
             return resultContent
         } catch (err) {

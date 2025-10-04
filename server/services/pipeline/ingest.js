@@ -18,9 +18,10 @@ async function ingest(job) {
                     await notifier.notifyProgress(job.id, "ERROR")
                     throw new Error("Failed to extract Web content");
                 }
-                logger.info("[Cleaned Artifact] Extracted web content", { artifact: artifact.content })
+                logger.info("[Cleaned Artifact] Extracted web content",)
+                const result = await saveCleanedArtifact(ArtifactKind.TEXT, job.id, artifact.content)
                 await notifier.notifyProgress(job.id, "INGESTING")
-                return await saveCleanedArtifact(ArtifactKind.TEXT, job.id, artifact.content)
+                return result
             }
             case 'YOUTUBE': {
                 artifact = await extractYT(job.id, job.url)
@@ -29,8 +30,9 @@ async function ingest(job) {
                     throw new Error("Failed to extract YouTube content");
                 }
                 logger.info("[Cleaned Artifact] Extracted yt content", { artifact: artifact.content })
+                const result = await saveCleanedArtifact(ArtifactKind.TEXT, job.id, artifact.content)
                 await notifier.notifyProgress(job.id, "INGESTING")
-                return await saveCleanedArtifact(ArtifactKind.TEXT, job.id, artifact.content)
+                return result
             }
             case 'TWITCH': {
                 artifact = await extractTwitch(job.id, job.url)
@@ -39,8 +41,9 @@ async function ingest(job) {
                     throw new Error("Failed to extract Twitch content");
                 }
                 logger.info("[Cleaned Artifact] Extracted twitch content", { artifact: artifact.content })
+                const result = await saveCleanedArtifact(ArtifactKind.TEXT, job.id, artifact.content)
                 await notifier.notifyProgress(job.id, "INGESTING")
-                return await saveCleanedArtifact(ArtifactKind.TEXT, job.id, artifact.content)
+                return result
             }
         }
     } catch (error) {

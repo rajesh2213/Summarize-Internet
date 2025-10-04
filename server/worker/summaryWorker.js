@@ -6,7 +6,8 @@ const { getArtifactWithDocId, getArtifactContent } = require('../services/artifa
 const { Status, SummaryType } = require('../generated/prisma');
 const { updateDocumentStatus } = require('../services/documentService');
 const { initListener } = require('../config/pgListener');
-const notifier = require('../services/notifier')
+const notifier = require('../services/notifier');
+const redisClient = require('../config/redisClient');
 
 const summarizer = new ContentSummarizer();
 const FALLBACK_INTERVAL = 5 * 60 * 1000;
@@ -67,8 +68,8 @@ async function claimAndProcessSummarizationJob() {
       return;
     }
     const artifactContent = await getArtifactContent(artifact.uri);
-    await notifier.notifyProgress(doc.id, "SUMMARIZING")
     const summaryContent = await retryWithBackoff(() => summarizer.summarize(artifactContent));
+    await notifier.notifyProgress(doc.id, "SUMMARIZING")
     
     if (!summaryContent) {
       logger.warn(`[summarizationWorker] Summary failed but continuing gracefully for doc ${doc.id}`);
@@ -90,6 +91,9 @@ async function claimAndProcessSummarizationJob() {
     if (summaryRow) {
       await updateTransactionStatus(tx.id, Status.COMPLETED);
       await updateDocumentStatus(doc.id, Status.COMPLETED);
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       await notifier.notifyProgress(doc.id, "COMPLETED", { summary: summaryContent })
       logger.info(`[summarizationWorker] Completed document ${doc.id}`);
     } else {
@@ -106,6 +110,13 @@ async function claimAndProcessSummarizationJob() {
 }
 
 async function summarizationWorkerLoop() {
+  try {
+    await redisClient.connect();
+    logger.info('[summarizationWorker] Redis connected successfully');
+  } catch (error) {
+    logger.error('[summarizationWorker] Failed to connect to Redis:', error);
+  }
+
   await initListener("ingested_doc", async (payload) => {
     logger.info(`[summarizationWorker] Notification received for document ${payload.id}`);
     await claimAndProcessSummarizationJob();

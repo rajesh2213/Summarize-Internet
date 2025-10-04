@@ -137,7 +137,7 @@ const login = async (req, res, next) => {
         const user = await authModel.getUserByEmail(email)
         if (!user) {
             const errorObj = {
-                errors: ["User with this email does not exists"],
+                errors: ["User with this email does not exist"],
                 message: "User not found",
                 status: 404
             }
@@ -147,7 +147,7 @@ const login = async (req, res, next) => {
         const matchPwd = await bcrypt.compare(pwd, user.password)
         if (!matchPwd) {
             const errorObj = {
-                errors: ["Invalid crendentials"],
+                errors: ["Invalid credentials"],
                 message: "Invalid credentials",
                 status: 401
             }

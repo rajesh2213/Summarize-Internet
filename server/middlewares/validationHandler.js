@@ -9,7 +9,12 @@ const validationHandler = (req, res, next) => {
             message: "Invalid input data",
             status: 422
         };
-        logger.warn('Validation failed', { errors: errorObj.errors, route: req.originalUrl });
+        logger.warn('Validation failed', { 
+            errors: errorObj.errors, 
+            route: req.originalUrl,
+            body: req.body,
+            validationErrors: errors.array()
+        });
         return next(errorObj);
     }
     next();

@@ -15,7 +15,7 @@ authRouter.post('/register', [
         .matches(/[A-Z]/).withMessage("Password must contain at least one uppercase letter")
         .matches(/[a-z]/).withMessage("Password must contain at least one lowercase letter")
         .matches(/[0-9]/).withMessage("Password must contain at least one number")
-        .matches(/[\W]/).withMessage("Password must caontain at least one special characer")
+        .matches(/[\W]/).withMessage("Password must contain at least one special character")
 ], validationHandler, authController.register)
 
 authRouter.post('/login', [

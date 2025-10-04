@@ -2,7 +2,7 @@ const prisma = require('../config/prismaClient')
 const logger = require('../config/logHandler')
 const notifier = require('../services/notifier')
 
-const createDocumet = async (url, source, userId) => {
+const createDocument = async (url, source, userId) => {
     try {
         const doc = await prisma.document.create({
             data: {
@@ -32,11 +32,11 @@ const createTransaction = async (userId, documentId) => {
         })
     } catch (error) {
         logger.error('Error creating transaction:', error)
-        throw new Error("Datase error while creating transaction")
+        throw new Error("Database error while creating transaction")
     }
 }
 
 module.exports = {
-    createDocumet,
+    createDocument,
     createTransaction
 }

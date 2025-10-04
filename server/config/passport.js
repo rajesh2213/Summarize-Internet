@@ -20,7 +20,7 @@ passport.use(new JwtStrategy(options, async (jwtPayload, done) => {
         }
         return done(null, user)
     }catch(err){
-        console.log('Error in passport stratedgy: ',err)
+        logger.error('Error in passport strategy: ',err)
         return done(err, false)
     }
 }))

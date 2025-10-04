@@ -112,12 +112,12 @@ const deleteUnverifiedUsers = () => {
             where: {
                 isVerified: false,
                 verificationTokenExpiresAt: {
-                    lf: twentyFourHoursAgo
+                    lt: twentyFourHoursAgo
                 }
             }
         })
     } catch(error) {
-        logger.error('Error deleting unverfied users: ',error)
+        logger.error('Error deleting unverified users: ',error)
         throw new Error('Database error while deleting unverified users')
     }
 }

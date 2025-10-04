@@ -10,14 +10,50 @@ const siteConfigs = require('../scoringConfig')
 const Score = require('../Score')
 const ContentStandardizer = require('../ContentStandardize')
 const notifier = require('../../notifier')
+const cacheService = require('../../cacheService')
 
 const standardizer = new ContentStandardizer();
 const jsonFetcher = new JsonApiFetcher();
 const structuredExtractor = new StructuredDataExtractor();
 
 async function extractWeb(jobId, url, options = {}) {
+    const EXTRACTION_TIMEOUT = 45000; 
+    
     try {
         logger.info(`Starting extraction for: ${url}`);
+
+        const cachedContent = await cacheService.getCachedWebContent(url);
+        if (cachedContent) {
+            logger.info("[Web Extraction] Using cached content for URL:", url);
+            return cachedContent;
+        }
+
+        const extractionPromise = performExtraction(jobId, url, options);
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Extraction timeout exceeded')), EXTRACTION_TIMEOUT);
+        });
+
+        return await Promise.race([extractionPromise, timeoutPromise]);
+
+    } catch (error) {
+        logger.error("Error extracting web content", { message: error.message, stack: error.stack });
+        return {
+            title: 'Extraction Failed',
+            content: '',
+            author: '',
+            date: '',
+            url,
+            source: 'error',
+            metadata: {
+                error: error.message,
+                extraction_method: 'failed'
+            }
+        };
+    }
+}
+
+async function performExtraction(jobId, url, options = {}) {
+    try {
 
         logger.info('Fetching static HTML...');
         await notifier.notifyProgress(jobId, "FETCHING_HTML")
@@ -40,7 +76,14 @@ async function extractWeb(jobId, url, options = {}) {
 
         if (isEmpty || textChars < 300 || density < 0.05 || looksLikeShell) {
             logger.info('Static HTML looks insufficient, falling back to dynamic fetch...');
-            html = await fetchDynamicHtml(url);
+            try {
+                html = await fetchDynamicHtml(url);
+            } catch (dynamicError) {
+                logger.warn('Dynamic fetch also failed, proceeding with static HTML', { 
+                    staticError: dynamicError.message,
+                    staticHtmlLength: html?.length || 0
+                });
+            }
         }
 
         if (!html || html.length < 200) {
@@ -56,7 +99,6 @@ async function extractWeb(jobId, url, options = {}) {
                     const jsonResult = await jsonFetcher.fetchFromJsonApi(url);
                     if (jsonResult) {
                         const standardized = standardizer.standardizeResult(jsonResult, url, 'json_api', 'flatWithRoles', { includeMetadata: true });
-                        logger.info(`[Content extraction] JSON API data extraction successful. Content`, { standardized });
                         return standardized;
                     }
                 } catch (error) {
@@ -69,7 +111,6 @@ async function extractWeb(jobId, url, options = {}) {
                     const redabilityExtract = await extractWithReadability(document, url);
                     if (redabilityExtract && redabilityExtract.content) {
                         const standardized = standardizer.standardizeResult([redabilityExtract], url, 'readability', 'flatWithRoles', { includeMetadata: true });
-                        logger.info(`[Content extraction] Readability data extraction successful. Content`, { standardized });
                         return standardized;
                     }
                 } catch (error) {
@@ -86,7 +127,6 @@ async function extractWeb(jobId, url, options = {}) {
                         );
                         if (structured) {
                             const standardized = standardizer.standardizeResult(structured, url, 'structured_data', 'flatWithRoles', { includeMetadata: true });
-                            logger.info(`[Content extraction] Structured data extraction successful. Content: `, { standardized });
                             return standardized;
                         }
                     }
@@ -106,7 +146,6 @@ async function extractWeb(jobId, url, options = {}) {
                     const extractedObj = extractMainFromHtml(document, config, url);
                     if (extractedObj) {
                         const standardized = standardizer.standardizeResult(extractedObj, url, 'html_parsing', 'flatWithRoles', { includeMetadata: true })
-                        logger.info(`[Content extraction] Heuristic data extraction successful. Content `, { standardized });
                         return standardized;
                     }
                 } catch (error) {
@@ -155,22 +194,15 @@ async function extractWeb(jobId, url, options = {}) {
         } else {
             logger.info("New prototype saved:", {proto});
         }
+
+        await cacheService.cacheWebContent(url, bestCandidate.candidate);
+        logger.info("[Web Extraction] Cached content for URL:", url);
+
         return bestCandidate.candidate;
 
     } catch (error) {
-        logger.error("Error extracting web content", { message: error.message, stack: error.stack });
-        return {
-            title: 'Extraction Failed',
-            content: '',
-            author: '',
-            date: '',
-            url,
-            source: 'error',
-            metadata: {
-                error: error.message,
-                extraction_method: 'failed'
-            }
-        };
+        logger.error("Error in performExtraction", { message: error.message, stack: error.stack });
+        throw error;
     }
 }
 
