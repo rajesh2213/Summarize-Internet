@@ -2,7 +2,6 @@ import {useState} from 'react'
 import { debounce } from '../../utils/commonHandler'
 import { Navigate } from 'react-router-dom'
 import * as validator from '../../utils/validator'
-import {loginUser} from '../../services/authService'
 import { useAuth } from '../../contexts/AuthContext'
 import styles from './login.module.css'
 
@@ -38,16 +37,8 @@ const Login = () => {
     const handleLoginSubmit = async (e) => {
         e.preventDefault()
         try{
-            console.log('click')
-            const res = await loginUser(formData)
-            const data = await res.json()
-            if(!res.ok){
-                console.error(data.errors)
-                setErrors({ ...errors, server: data.errors.join('\n') })
-            } else {
-                auth.login(data.accessToken, data.user)
-                setRedirect(true)
-            }
+            await auth.login(formData)
+            setRedirect(true)
         } catch (error) {
             setErrors({ ...errors, server: error.message || "Something went wrong..." })
         }

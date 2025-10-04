@@ -1,5 +1,5 @@
-import { useState, useEffect, useContext, createContext } from "react";
-import {refreshToken, logoutUser} from '../services/authService'
+import { useContext, createContext } from "react";
+import { useAuthStatus, useLogin, useLogout, useRefreshToken } from '../hooks/useAuth'
 import logger from '../utils/logger'
 
 const AuthContext = createContext(null);
@@ -13,62 +13,44 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({children}) => {
+    const { data: authData, isLoading: authLoading, error: authError } = useAuthStatus()
+    const loginMutation = useLogin()
+    const logoutMutation = useLogout()
+    const refreshTokenMutation = useRefreshToken()
 
-    const [token, setToken] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [user, setUser] = useState(null)
-    const [isAuth, setIsAuth] = useState(false)
-
-    useEffect(() => {
-        const tryRefresh = async () => {
-            const res = await refreshToken();
-            try{
-                if(res.ok){
-                    const data = await res.json()
-                    if(data.accessToken){
-                        logger.info('Auth refresh token success')
-                        login(data.accessToken, data.user)
-                        return
-                    }else {
-                    setToken(null)
-                    setUser(null)
-                    setIsAuth(false)
-                }
-                }
-                logger.info('Auth refresh token')
-            }catch(err){
-                logger.warn('Auth refresh token error: ', err)
-                setToken(null)
-                setUser(null)
-                setIsAuth(false)
-            }finally{
-                setLoading(false)
-            }
+    const login = async (credentials) => {
+        try {
+            await loginMutation.mutateAsync(credentials)
+        } catch (err) {
+            logger.error('[AuthContext] Login failed:', err)
+            throw err
         }
-        tryRefresh()
-    }, [])
-
-    const login = (token, userData) => {
-        setToken(token)
-        setUser(userData)
-        setIsAuth(true)
     }
 
     const logout = async () => {
         try {
-            const res = await logoutUser()
-            if (res.ok) {
-                setToken(null)
-                setIsAuth(false)
-            }
+            await logoutMutation.mutateAsync()
         } catch (err) {
-            logger.warn('Logout failed: ', err)
-            setToken(null)
+            logger.error('[AuthContext] Logout failed:', err)
+            throw err
         }
     }
 
+    const isAuthenticated = authData?.isAuthenticated || false
+    const user = authData?.user || null
+    const token = authData?.token || null
+    const loading = authLoading || loginMutation.isPending || logoutMutation.isPending
+
     return (
-        <AuthContext.Provider value={{token, loading, user, isAuth, logout, login}}>
+        <AuthContext.Provider value={{
+            token, 
+            loading, 
+            user, 
+            isAuth: isAuthenticated, 
+            logout, 
+            login,
+            error: authError || loginMutation.error || logoutMutation.error
+        }}>
             {children}
         </AuthContext.Provider>
     )

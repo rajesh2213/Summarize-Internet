@@ -7,9 +7,10 @@ import ResizableSplitter from '../../components/ResizableSplitter/ResizableSplit
 import Footer from '../../components/Footer/Footer'
 import { useEffect } from 'react'
 import { statusMap } from '../../utils/statusMap'
-import { fetchSummary } from '../../services/summaryService'
+import { fetchSummary, postUrl } from '../../services/summaryService'
 import { useAuth } from '../../contexts/AuthContext'
 import { useSummary } from '../../contexts/SummaryContext'
+import { useSummary as useSummaryQuery } from '../../hooks/useSummary'
 import LoadingBar from '../../components/LoadingBar/LoadingBar'
 import logger from '../../utils/logger'
 
@@ -20,6 +21,8 @@ const Home = () => {
     const { docId, status, summary, error, setDocId, setStatus, setSummary, setError, resetSummaryState } = useSummary()
     const auth = useAuth()
     const mainRef = useRef(null)
+    
+    const { data: cachedSummary, isLoading: summaryLoading, error: summaryError } = useSummaryQuery(docId, status)
 
     const scrollToMainContent = () => {
         if (mainRef.current) {
@@ -36,6 +39,13 @@ const Home = () => {
     useEffect(() => {
         resetSummaryState()
     }, [])
+
+    useEffect(() => {
+        if (cachedSummary?.summary && status === "COMPLETED" && !summary) {
+            logger.info(`[Home] Setting summary from cached data for docId: ${docId}`)
+            setSummary(cachedSummary.summary)
+        }
+    }, [cachedSummary, status, docId, summary])
 
     useEffect(() => {
         if (summary) {
@@ -87,19 +97,23 @@ const Home = () => {
                 setStatus(data.stage)
 
                 if (data.stage === "COMPLETED" || data.stage === "ERROR") {
-                    if (data.summary) {
-                        setSummary(data.summary)
-                    } else if (data.stage === "COMPLETED") {
-                        try {
-                            const res = await fetchSummary(docId, auth)
-                            const summaryData = await res.json()
-                            if (!res.ok) {
+                    if (data.stage === "COMPLETED") {
+                        if (data.summary) {
+                            setSummary(data.summary)
+                        } else if (cachedSummary?.summary) {
+                            setSummary(cachedSummary.summary)
+                        } else {
+                            try {
+                                const res = await fetchSummary(docId, auth)
+                                const summaryData = await res.json()
+                                if (!res.ok) {
+                                    setError("Failed to fetch summary, Try again..")
+                                } else {
+                                    setSummary(summaryData.summary)
+                                }
+                            } catch (err) {
                                 setError("Failed to fetch summary, Try again..")
-                            } else {
-                                setSummary(summaryData.summary)
                             }
-                        } catch (err) {
-                            setError("Failed to fetch summary, Try again..")
                         }
                     } else {
                         setError("Processing failed. Please try again.")
@@ -131,13 +145,19 @@ const Home = () => {
         }
     }, [docId])
 
-    const handleUrlSubmit = (id, stage) => {
-        logger.info(`[Home] handleUrlSubmit called with id: ${id}, stage: ${stage}`)
+    const handleUrlSubmit = (docId, status, isExisting = false) => {
+        logger.info(`[Home] handleUrlSubmit called with docId: ${docId}, status: ${status}, existing: ${isExisting}`)
+        
         resetSummaryState()
-        const mapped = statusMap[stage]
-        setDocId(id)
-        setStatus(stage)
+        setDocId(docId)
+        setStatus(status)
         setSubmitted(true)
+        
+        if (isExisting && status === "COMPLETED") {
+            logger.info(`[Home] Document already exists with completed summary, fetching summary for docId: ${docId}`)
+        } else if (isExisting && status === "QUEUED") {
+            logger.info(`[Home] Document already exists but being processed, waiting for completion for docId: ${docId}`)
+        }
     }
 
     return (
@@ -165,7 +185,15 @@ const Home = () => {
                                 {error && (
                                     <div className={styles.errorBox}>
                                         <p>{error}</p>
-                                        <SummaryForm onSubmit={handleUrlSubmit} />
+                                        <button 
+                                            onClick={() => {
+                                                setError(null)
+                                                setSubmitted(false)
+                                            }}
+                                            className={styles.retryButton}
+                                        >
+                                            Try Again
+                                        </button>
                                     </div>
                                 )}
 

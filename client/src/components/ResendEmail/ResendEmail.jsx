@@ -33,7 +33,7 @@ const ResendEmail = ({ email }) => {
         setResendStatus('Sending...');
 
         try {
-            const res = await resendVerificationEmail(formData.email);
+            const res = await resendVerificationEmail(email);
             const data = await res.json();
             if (res.ok) {
                 setResendStatus('New verification email sent successfully! ✅');

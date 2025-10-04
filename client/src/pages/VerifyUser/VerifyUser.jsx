@@ -19,12 +19,12 @@ const VerifyUser = () => {
                     <h2>Verifiation failed!</h2>
                     <p>{message || "Oops...Something went wrong"}</p>
                 </div>
-            ) : status === "pending" (
+            ) : status === "pending" ? (
                 <div>
                     <h2>Pending email verification!</h2>
                     <p>{message || "Oops...Something went wrong"}</p>
                 </div>
-            )}
+            ) : null}
         </div>
     )
 }
