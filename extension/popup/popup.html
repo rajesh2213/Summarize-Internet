@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Summarize-Internet Extension</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container" id="popup-container">
+    <div class="popup-header">
+      <div class="logo">
+        <i class="fas fa-file-alt"></i>
+        <span>Summarize-Internet</span>
+      </div>
+    </div>
+
+    <div class="popup-content">
+      <div id="main-content">
+        <div class="welcome-section">
+          <p>Get AI-powered summaries of any webpage, youtube videos, reddit posts and more.</p>
+        </div>
+
+        <div class="action-section">
+          <button id="summarize-current-page" class="primary-btn">
+            <i class="fas fa-file-alt"></i>
+            Summarize Current Page
+          </button>
+
+          <div class="url-input-section">
+            <label for="custom-url">Or enter an URL:</label>
+            <div class="input-group">
+              <input type="url" id="custom-url" placeholder="https://example.com" />
+              <button id="summarize-custom-url" class="secondary-btn">Summarize</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-section" id="auth-section" style="display: none;">
+          <div class="auth-message">
+            <p>💡 <strong>Optional:</strong> Login for enhanced features and saved summaries.</p>
+            <button id="login-btn" class="auth-btn">Login / Register</button>
+          </div>
+        </div>
+
+        <div class="logout-section" id="logout-section" style="display: none;">
+          <div class="logout-message">
+            <button id="logout-btn" class="auth-btn logout-btn">Logout</button>
+          </div>
+        </div>
+
+        <div class="status-section" id="status-section" style="display: none;">
+          <div class="status-content">
+            <div class="loading-spinner" id="loading-spinner"></div>
+            <p id="status-message">Processing your request...</p>
+            <div class="progress-bar" id="progress-bar" style="display: none;">
+              <div class="progress-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-section" id="result-section" style="display: none;">
+          <div class="result-header">
+            <h4>📄 Summary</h4>
+            <div class="result-header-actions">
+              <button id="copy-summary" class="icon-btn" title="Copy to clipboard">
+                <i class="fas fa-copy"></i>
+              </button>
+              <button id="close-summary" class="icon-btn close-btn" title="Close">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          <div class="summary-content" id="summary-content"></div>
+          <div class="result-actions">
+            <button id="new-summary" class="secondary-btn">🔄 New Summary</button>
+            <button id="view-full-site" class="primary-btn">View Full Site</button>
+          </div>
+        </div>
+
+        <div class="error-section" id="error-section" style="display: none;">
+          <div class="error-content">
+            <div class="error-icon">❌</div>
+            <p id="error-message">Something went wrong. Please try again.</p>
+            <button id="retry-btn" class="primary-btn">Try Again</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-links">
+          <button id="help-btn" class="link-btn">Help</button>
+        </div>
+        <div class="version">v1.0.0</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/config.js"></script>
+  <script src="../shared/api.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

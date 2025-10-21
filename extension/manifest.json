@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "Summarize-Internet",
+  "version": "1.0.0",
+  "description": "Summarize any webpage with AI-powered content analysis",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "icons": {
+    "16": "icons/04-icon-site-wand.png",
+    "32": "icons/04-icon-site-wand.png",
+    "48": "icons/04-icon-site-wand.png",
+    "128": "icons/04-icon-site-wand.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Summarize-Internet",
+    "default_icon": {
+      "16": "icons/04-icon-site-wand.png",
+      "32": "icons/04-icon-site-wand.png",
+      "48": "icons/04-icon-site-wand.png",
+      "128": "icons/04-icon-site-wand.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["shared/config.js", "shared/api.js", "content/content.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["http://localhost:4000/*", "http://localhost:5173/*", "https://your-domain.com/*"],
+      "js": ["website/website-auth-sync.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "web_accessible_resources": [{
+    "resources": ["popup/*", "content/*", "shared/*"],
+    "matches": ["<all_urls>"]
+  }],
+  "commands": {
+    "summarize-page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S"
+      },
+      "description": "Summarize current page"
+    }
+  }
+}

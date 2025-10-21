@@ -1,0 +1,16 @@
+{
+  "name": "summarize-internet-extension",
+  "version": "1.0.0",
+  "description": "Browser extension for Summarize-Internet",
+  "scripts": {
+    "install": "echo 'Extension ready! Load the extension folder in your browser.'"
+  },
+  "keywords": [
+    "browser-extension",
+    "summarization",
+    "ai",
+    "chrome-extension"
+  ],
+  "author": "Raajesh",
+  "license": "MIT"
+}
