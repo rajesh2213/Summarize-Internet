@@ -55,6 +55,17 @@ export const useLogin = () => {
         user: data.user,
         token: data.accessToken
       })
+      
+      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('username', data.user.username)
+      
+      window.dispatchEvent(new CustomEvent('auth:login', {
+        detail: {
+          accessToken: data.accessToken,
+          user: data.user
+        }
+      }))
+      
       logger.info('[useLogin] Login successful')
     },
     onError: (error) => {
@@ -84,6 +95,11 @@ export const useLogout = () => {
       queryClient.removeQueries({ queryKey: ['summary'] })
       queryClient.removeQueries({ queryKey: ['documentStatus'] })
       
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('username')
+      
+      window.dispatchEvent(new CustomEvent('auth:logout'))
+      
       logger.info('[useLogout] Logout successful')
     },
     onError: (error) => {
@@ -109,6 +125,10 @@ export const useRefreshToken = () => {
         user: data.user,
         token: data.accessToken
       })
+      
+      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('username', data.user.username)
+      
       logger.info('[useRefreshToken] Token refreshed successfully')
     },
     onError: (error) => {
@@ -118,6 +138,11 @@ export const useRefreshToken = () => {
         user: null,
         token: null
       })
+      
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('username')
+      
+      window.dispatchEvent(new CustomEvent('auth:logout'))
     },
   })
 }
