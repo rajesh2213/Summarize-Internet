@@ -23,10 +23,13 @@ model User {
   firstName                  String    @map("first_name")
   lastName                   String?   @map("last_name")
   username                   String
-  password                   String
+  password                   String?
   isVerified                 Boolean   @default(false) @map("is_verified")
   verificationToken          String?   @unique @map("verification_token")
   verificationTokenExpiresAt DateTime? @map("verification_token_expires_at")
+  googleId                   String?   @unique @map("google_id")
+  profilePicture             String?   @map("profile_picture")
+  authProvider               String    @default("local") @map("auth_provider")
   createdAt                  DateTime  @default(now())
 
   transactions Transaction[]

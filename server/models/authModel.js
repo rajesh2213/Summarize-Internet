@@ -11,20 +11,30 @@ const createUser = async ({
     isVerified,
     verificationToken,
     verificationTokenExpiresAt,
+    googleId,
+    profilePicture,
+    authProvider = 'local'
 }) => {
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const userData = {
+            email,
+            firstName,
+            lastName,
+            username,
+            isVerified,
+            verificationToken,
+            verificationTokenExpiresAt,
+            googleId,
+            profilePicture,
+            authProvider
+        };
+
+        if (password) {
+            userData.password = await bcrypt.hash(password, 10);
+        }
+
         const newUser = await prisma.user.create({
-            data: {
-                email,
-                firstName,
-                lastName,
-                username,
-                password: hashedPassword,
-                isVerified,
-                verificationToken,
-                verificationTokenExpiresAt,
-            },
+            data: userData,
         });
         return newUser;
     } catch (error) {
@@ -56,6 +66,19 @@ const getUserByEmail = async (email) => {
     } catch (error) {
         logger.error('Error fetching user with email:', error);
         throw new Error('Database error fetching user with email');
+    }
+}
+
+const getUserByGoogleId = async (googleId) => {
+    try {
+        return await prisma.user.findUnique({
+            where: {
+                googleId
+            }
+        })
+    } catch (error) {
+        logger.error('Error fetching user with Google ID:', error);
+        throw new Error('Database error fetching user with Google ID');
     }
 }
 
@@ -126,6 +149,7 @@ module.exports = {
     createUser,
     getUserById,
     getUserByEmail,
+    getUserByGoogleId,
     getUserByVerificationToken,
     updateUserVerificationToken,
     updateUserVerificationStatus,

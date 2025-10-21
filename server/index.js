@@ -3,6 +3,8 @@ const express = require('express');
 const app = express();
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
+const session = require('express-session');
+const RedisStore = require('connect-redis').default;
 const passport = require('./config/passport');
 const errorHandler = require('./middlewares/errorHandler')
 const authRouter = require('./routes/auth')
@@ -28,6 +30,23 @@ initializeRedis();
 app.use(express.json({ limit: '25mb'}));
 app.use(express.urlencoded({ extended: true}));
 app.use(cookieParser());
+
+app.use(session({
+    store: new RedisStore({ 
+        client: redisClient.getClient(),
+        prefix: 'sess:',
+        ttl: 24 * 60 * 60 
+    }),
+    secret: process.env.SESSION_SECRET || 'your-session-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 
+    }
+}));
+
 app.use(cors({
     origin: [
         'http://localhost:5173',
@@ -41,6 +60,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }))
 app.use(passport.initialize())
+app.use(passport.session())
 
 app.use('/api/auth', authRouter)
 app.use('/api/v1', summaryRouter)

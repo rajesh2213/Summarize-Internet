@@ -235,11 +235,44 @@ const refreshToken = async (req, res, next) => {
     }
 }
 
+const googleCallback = async (req, res, next) => {
+    try {
+        const user = req.user;
+        
+        if (!user) {
+            return res.redirect(`${process.env.CLIENT_URL}/login?error=google_auth_failed`);
+        }
+
+        const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30m' });
+        const refreshToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'None',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/'
+        });
+
+        const { password, isVerified, verificationToken, verificationTokenExpiresAt, ...userData } = user;
+        const userDataString = encodeURIComponent(JSON.stringify(userData));
+        const tokenString = encodeURIComponent(accessToken);
+        
+        res.redirect(`${process.env.CLIENT_URL}/auth/google/success?token=${tokenString}&user=${userDataString}`);
+        
+        logger.info(`Google OAuth login successful for user: `, { userId: user.id, email: user.email });
+    } catch (err) {
+        logger.error('Google OAuth callback error:', err);
+        res.redirect(`${process.env.CLIENT_URL}/login?error=google_auth_failed`);
+    }
+}
+
 module.exports = {
     register,
     login,
     logout,
     refreshToken,
     verifyUser,
-    resendVerificationEmail
+    resendVerificationEmail,
+    googleCallback
 }

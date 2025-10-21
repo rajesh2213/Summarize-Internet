@@ -1,5 +1,6 @@
 const {body} = require("express-validator")
 const {Router} = require("express")
+const passport = require('../config/passport')
 const authRouter = Router()
 const authController = require("../controllers/authController")
 const validationHandler = require("../middlewares/validationHandler")
@@ -34,5 +35,14 @@ authRouter.post('/resend-verification', resendLimiter, [
     body('email').isEmail().withMessage('Invalid email address')
 ], validationHandler, authController.resendVerificationEmail);
 
+authRouter.get('/google', passport.authenticate('google', { 
+    scope: ['profile', 'email'],
+    prompt: 'select_account consent' 
+}));
+
+authRouter.get('/google/callback', 
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    authController.googleCallback
+);
 
 module.exports = authRouter
