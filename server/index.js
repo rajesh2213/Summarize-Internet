@@ -62,6 +62,15 @@ app.use(cors({
 app.use(passport.initialize())
 app.use(passport.session())
 
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 app.use('/api/auth', authRouter)
 app.use('/api/v1', summaryRouter)
 app.use('/api/v1', progressRouter)
