@@ -16,6 +16,17 @@ const logger = require('./config/logHandler');
 require('./cron-jobs/purgeLogs')
 require("./cron-jobs/purgeUnverifiedUsers")
 
+async function initializeDatabase() {
+    try {
+        console.log('=== RUNNING DATABASE MIGRATIONS ===');
+        const { execSync } = require('child_process');
+        execSync('npx prisma migrate deploy --schema=./prisma/schema.prisma', { stdio: 'inherit' });
+        console.log('=== MIGRATIONS COMPLETED SUCCESSFULLY ===');
+    } catch (error) {
+        console.error('=== MIGRATION FAILED ===', error.message);
+    }
+}
+
 async function initializeRedis() {
     try {
         await redisClient.connect();
@@ -25,7 +36,9 @@ async function initializeRedis() {
     }
 }
 
-initializeRedis();
+initializeDatabase().then(() => {
+    initializeRedis();
+});
 
 app.use(express.json({ limit: '25mb'}));
 app.use(express.urlencoded({ extended: true}));
