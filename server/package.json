@@ -4,8 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js",
-    "postinstall": "prisma generate"
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +20,6 @@
     "connect-redis": "^7.1.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
