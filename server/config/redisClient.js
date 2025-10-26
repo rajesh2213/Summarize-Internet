@@ -10,17 +10,32 @@ class RedisClient {
 
     async connect() {
         try {
-            this.client = new Redis({
-                host: process.env.REDIS_HOST || 'localhost',
-                port: process.env.REDIS_PORT || 6379,
-                password: process.env.REDIS_PASSWORD || undefined,
-                db: process.env.REDIS_DB || 0,
-                retryDelayOnFailover: 100,
-                maxRetriesPerRequest: 3,
-                lazyConnect: true,
-                connectTimeout: 10000,
-                commandTimeout: 5000,
-            });
+            let redisConfig;
+            
+            if (process.env.REDIS_URL) {
+                redisConfig = {
+                    url: process.env.REDIS_URL,
+                    retryDelayOnFailover: 100,
+                    maxRetriesPerRequest: 3,
+                    lazyConnect: true,
+                    connectTimeout: 10000,
+                    commandTimeout: 5000,
+                };
+            } else {
+                redisConfig = {
+                    host: process.env.REDIS_HOST || 'localhost',
+                    port: process.env.REDIS_PORT || 6379,
+                    password: process.env.REDIS_PASSWORD || undefined,
+                    db: process.env.REDIS_DB || 0,
+                    retryDelayOnFailover: 100,
+                    maxRetriesPerRequest: 3,
+                    lazyConnect: true,
+                    connectTimeout: 10000,
+                    commandTimeout: 5000,
+                };
+            }
+
+            this.client = new Redis(redisConfig);
 
             this.client.on('connect', () => {
                 logger.info('[Redis] Connected to Redis server');
