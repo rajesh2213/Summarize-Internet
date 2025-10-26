@@ -35,6 +35,8 @@ COPY server/prisma ./prisma
 
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
+RUN npx prisma migrate deploy --schema=./prisma/schema.prisma
+
 RUN npm prune --production && npm cache clean --force
 
 FROM base AS production
