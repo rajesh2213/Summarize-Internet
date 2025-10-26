@@ -10,9 +10,17 @@ class RedisClient {
 
     async connect() {
         try {
+            // Debug Redis configuration
+            console.log('🔍 Redis Debug:');
+            console.log('REDIS_URL exists:', !!process.env.REDIS_URL);
+            console.log('REDIS_URL value:', process.env.REDIS_URL ? process.env.REDIS_URL.substring(0, 20) + '...' : 'undefined');
+            console.log('REDIS_HOST:', process.env.REDIS_HOST);
+            console.log('REDIS_PORT:', process.env.REDIS_PORT);
+            
             let redisConfig;
             
             if (process.env.REDIS_URL) {
+                console.log('Using REDIS_URL configuration');
                 redisConfig = {
                     url: process.env.REDIS_URL,
                     retryDelayOnFailover: 100,
@@ -22,6 +30,7 @@ class RedisClient {
                     commandTimeout: 5000,
                 };
             } else {
+                console.log('Using individual Redis variables configuration');
                 redisConfig = {
                     host: process.env.REDIS_HOST || 'localhost',
                     port: process.env.REDIS_PORT || 6379,
