@@ -1,4 +1,5 @@
 import { useSearchParams, Link } from "react-router-dom"
+import styles from './VerifyUser.module.css'
 
 const VerifyUser = () => {
     let [searchParams] = useSearchParams();
@@ -8,9 +9,9 @@ const VerifyUser = () => {
         message = message.split('_').join(' ')
     }
     return (
-        <div>
+        <div className={styles.verifyUserContainer}>
             {status === "success" ? (
-                <div>
+                <div className={styles.successContainer}>
                     <h2>Veification successful!</h2>
                     <Link to="/login">Login...</Link>
                 </div>

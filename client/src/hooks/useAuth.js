@@ -45,6 +45,10 @@ export const useLogin = () => {
       const response = await loginUser(credentials)
       if (!response.ok) {
         const errorData = await response.json()
+        if (errorData.redirectUrl && errorData.status === 403) {
+          window.location.href = errorData.redirectUrl
+          return
+        }
         throw new Error(errorData.errors?.join('\n') || 'Login failed')
       }
       return response.json()

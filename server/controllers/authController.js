@@ -155,7 +155,13 @@ const login = async (req, res, next) => {
         }
 
         if (!user.isVerified) {
-            return res.redirect(`${process.env.APP_BASE_URL}/verify-user?status=pending&message=pending_user_email_verification`);
+            const errorObj = {
+                errors: ["Email verification required"],
+                message: "Please verify your email before logging in",
+                status: 403,
+                redirectUrl: `${process.env.APP_BASE_URL}/verify-user?status=pending&message=pending_user_email_verification`
+            }
+            return next(errorObj)
         }
 
         const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30m' })
@@ -258,12 +264,12 @@ const googleCallback = async (req, res, next) => {
         const userDataString = encodeURIComponent(JSON.stringify(userData));
         const tokenString = encodeURIComponent(accessToken);
         
-        res.redirect(`${process.env.CLIENT_URL}/auth/google/success?token=${tokenString}&user=${userDataString}`);
+        res.redirect(`${process.env.APP_BASE_URL}/auth/google/success?token=${tokenString}&user=${userDataString}`);
         
         logger.info(`Google OAuth login successful for user: `, { userId: user.id, email: user.email });
     } catch (err) {
         logger.error('Google OAuth callback error:', err);
-        res.redirect(`${process.env.CLIENT_URL}/login?error=google_auth_failed`);
+        res.redirect(`${process.env.APP_BASE_URL}/login?error=google_auth_failed`);
     }
 }
 

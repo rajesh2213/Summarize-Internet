@@ -4,7 +4,7 @@ import { debounce } from '../../utils/commonHandler'
 import { Navigate } from 'react-router-dom'
 import * as validator from '../../utils/validator'
 import { useAuth } from '../../contexts/AuthContext'
-import styles from './login.module.css'
+import styles from './Login.module.css'
 
 const API_URL = import.meta.env.VITE_API_URL
 

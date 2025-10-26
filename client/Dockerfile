@@ -1,4 +1,4 @@
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 FROM base AS development
 WORKDIR /app
@@ -21,8 +21,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-RUN addgroup -g 1001 -S nginx
-RUN adduser -S nginx -u 1001
+RUN addgroup -g 1001 -S appuser
+RUN adduser -S appuser -u 1001
 
 RUN chown -R nginx:nginx /usr/share/nginx/html
 RUN chown -R nginx:nginx /var/cache/nginx

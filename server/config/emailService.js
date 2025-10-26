@@ -4,6 +4,13 @@ const logger = require('./logHandler');
 
 const sendVerificationEmail = async ({ email, username, token }) => {
     try {
+        if (process.env.EMAIL_USER === 'your-email@gmail.com' || process.env.EMAIL_PASS === 'your-app-password') {
+            const verificationLink = `${process.env.API_BASE_URL}/api/auth/verify?token=${token}`
+            
+            logger.info(`Verification email logged to console for ${email} (development mode)`)
+            return;
+        }
+
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -33,7 +40,7 @@ const sendVerificationEmail = async ({ email, username, token }) => {
                 <p>${verificationLink}</p>
             `
         }
-        transporter.sendMail(mailOptions)
+        await transporter.sendMail(mailOptions)
         logger.info(`Verification email sent to ${email}`)
     }catch(err){
         logger.error(`Error sending verification email to ${email}:`, err)

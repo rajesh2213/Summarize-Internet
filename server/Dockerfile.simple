@@ -1,4 +1,4 @@
-FROM node:18-alpine AS base
+FROM node:18-alpine
 
 RUN apk add --no-cache \
     chromium \
@@ -16,38 +16,21 @@ RUN apk add --no-cache \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-FROM base AS development
 WORKDIR /app
+
 COPY package*.json ./
-RUN npm ci --only=development
+
+RUN npm ci
+
 COPY . .
-EXPOSE 4000
-CMD ["npm", "run", "dev"]
-
-FROM base AS builder
-WORKDIR /app
-COPY package*.json ./
-
-RUN npm cache clean --force
-RUN npm ci --include=dev
-
-COPY prisma ./prisma
 
 RUN npx prisma generate
 
-RUN npm prune --production && npm cache clean --force
-
-FROM base AS production
-WORKDIR /app
+RUN mkdir -p logs
 
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
-
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-COPY --chown=nodejs:nodejs . .
-
-RUN mkdir -p logs && chown nodejs:nodejs logs
+RUN chown -R nodejs:nodejs /app
 
 USER nodejs
 

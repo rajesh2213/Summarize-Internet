@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: summarize-postgres
     environment:
       POSTGRES_DB: summary_db
@@ -34,18 +32,17 @@ services:
   server:
     build:
       context: ./server
-      dockerfile: Dockerfile
-      target: development
+      dockerfile: Dockerfile.simple
     container_name: summarize-server
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://username:password@postgres:5432/summary_db?schema=public
-      - SHADOW_DATABASE_URL=postgresql://username:password@postgres:5432/shadowdb?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/summary_db?schema=public
+      - SHADOW_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/shadowdb?schema=public
       - REDIS_URL=redis://redis:6379
       - SESSION_SECRET=your-session-secret-here
       - JWT_SECRET="your-jwt-secret-here"
-      - EMAIL_USER=your-email@gmail.com
-      - EMAIL_PASS="your-app-password"
       - API_BASE_URL=http://localhost:4000
       - APP_BASE_URL=http://localhost:5173
       - NODE_ENV=DEV
@@ -92,6 +89,176 @@ services:
       - ./client:/app
       - /app/node_modules
     restart: unless-stopped
+
+  # Document Workers (Multiple Instances)
+  document-worker-1:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.simple
+    container_name: summarize-document-worker-1
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/summary_db?schema=public
+      - SHADOW_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/shadowdb?schema=public
+      - REDIS_URL=redis://redis:6379
+      - SESSION_SECRET=your-session-secret-here
+      - JWT_SECRET="your-jwt-secret-here"
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - API_BASE_URL=http://localhost:4000
+      - APP_BASE_URL=http://localhost:5173
+      - NODE_ENV=DEV
+      - YOUTUBE_API_KEY=your-youtube-api-key-here
+      - OPENAI_API_KEY=your-openai-api-key-here
+      - CLOUDFLARE_R2_URL=your-r2-url-here
+      - CLOUDFLARE_R2_KEY=your-r2-key-here
+      - CLOUDFLARE_R2_SECRET=your-r2-secret-here
+      - CLOUDFLARE_R2_BUCKET=your-bucket-name
+      - REDDIT_CLIENTID=your-reddit-client-id
+      - REDDIT_CLIENT_SECRET=your-reddit-client-secret
+      - REDDIT_USERNAME=your-reddit-username
+      - REDDIT_PASSWORD="your-reddit-password"
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    restart: unless-stopped
+    command: ["node", "worker/documentWorker.js"]
+
+  document-worker-2:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.simple
+    container_name: summarize-document-worker-2
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/summary_db?schema=public
+      - SHADOW_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/shadowdb?schema=public
+      - REDIS_URL=redis://redis:6379
+      - SESSION_SECRET=your-session-secret-here
+      - JWT_SECRET="your-jwt-secret-here"
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - API_BASE_URL=http://localhost:4000
+      - APP_BASE_URL=http://localhost:5173
+      - NODE_ENV=DEV
+      - YOUTUBE_API_KEY=your-youtube-api-key-here
+      - OPENAI_API_KEY=your-openai-api-key-here
+      - CLOUDFLARE_R2_URL=your-r2-url-here
+      - CLOUDFLARE_R2_KEY=your-r2-key-here
+      - CLOUDFLARE_R2_SECRET=your-r2-secret-here
+      - CLOUDFLARE_R2_BUCKET=your-bucket-name
+      - REDDIT_CLIENTID=your-reddit-client-id
+      - REDDIT_CLIENT_SECRET=your-reddit-client-secret
+      - REDDIT_USERNAME=your-reddit-username
+      - REDDIT_PASSWORD="your-reddit-password"
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    restart: unless-stopped
+    command: ["node", "worker/documentWorker.js"]
+
+  # Summary Workers (Multiple Instances)
+  summary-worker-1:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.simple
+    container_name: summarize-summary-worker-1
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/summary_db?schema=public
+      - SHADOW_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/shadowdb?schema=public
+      - REDIS_URL=redis://redis:6379
+      - SESSION_SECRET=your-session-secret-here
+      - JWT_SECRET="your-jwt-secret-here"
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - API_BASE_URL=http://localhost:4000
+      - APP_BASE_URL=http://localhost:5173
+      - NODE_ENV=DEV
+      - YOUTUBE_API_KEY=your-youtube-api-key-here
+      - OPENAI_API_KEY=your-openai-api-key-here
+      - CLOUDFLARE_R2_URL=your-r2-url-here
+      - CLOUDFLARE_R2_KEY=your-r2-key-here
+      - CLOUDFLARE_R2_SECRET=your-r2-secret-here
+      - CLOUDFLARE_R2_BUCKET=your-bucket-name
+      - REDDIT_CLIENTID=your-reddit-client-id
+      - REDDIT_CLIENT_SECRET=your-reddit-client-secret
+      - REDDIT_USERNAME=your-reddit-username
+      - REDDIT_PASSWORD="your-reddit-password"
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    restart: unless-stopped
+    command: ["node", "worker/summaryWorker.js"]
+
+  summary-worker-2:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.simple
+    container_name: summarize-summary-worker-2
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/summary_db?schema=public
+      - SHADOW_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/shadowdb?schema=public
+      - REDIS_URL=redis://redis:6379
+      - SESSION_SECRET=your-session-secret-here
+      - JWT_SECRET="your-jwt-secret-here"
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - API_BASE_URL=http://localhost:4000
+      - APP_BASE_URL=http://localhost:5173
+      - NODE_ENV=DEV
+      - YOUTUBE_API_KEY=your-youtube-api-key-here
+      - OPENAI_API_KEY=your-openai-api-key-here
+      - CLOUDFLARE_R2_URL=your-r2-url-here
+      - CLOUDFLARE_R2_KEY=your-r2-key-here
+      - CLOUDFLARE_R2_SECRET=your-r2-secret-here
+      - CLOUDFLARE_R2_BUCKET=your-bucket-name
+      - REDDIT_CLIENTID=your-reddit-client-id
+      - REDDIT_CLIENT_SECRET=your-reddit-client-secret
+      - REDDIT_USERNAME=your-reddit-username
+      - REDDIT_PASSWORD="your-reddit-password"
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    restart: unless-stopped
+    command: ["node", "worker/summaryWorker.js"]
 
 volumes:
   postgres_data:

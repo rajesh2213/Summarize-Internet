@@ -1,22 +1,18 @@
-// Cache management utilities
 class CacheManager {
   constructor() {
     this.queryClient = null
   }
 
-  // Set the query client instance
   setQueryClient(queryClient) {
     this.queryClient = queryClient
   }
 
-  // Ensure query client is available
   ensureQueryClient() {
     if (!this.queryClient) {
       throw new Error('QueryClient not initialized. Call setQueryClient first.')
     }
   }
 
-  // Prefetch summary data
   async prefetchSummary(docId) {
     console.log('PreFetching...')
     this.ensureQueryClient()
@@ -29,11 +25,10 @@ class CacheManager {
         }
         return response.json()
       },
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     })
   }
 
-  // Invalidate summary cache
   invalidateSummary(docId) {
     this.ensureQueryClient()
     this.queryClient.invalidateQueries({ 
@@ -41,7 +36,6 @@ class CacheManager {
     })
   }
 
-  // Invalidate all summary caches
   invalidateAllSummaries() {
     this.ensureQueryClient()
     this.queryClient.invalidateQueries({ 
@@ -49,13 +43,11 @@ class CacheManager {
     })
   }
 
-  // Clear all caches
   clearAllCaches() {
     this.ensureQueryClient()
     this.queryClient.clear()
   }
 
-  // Get cache statistics
   getCacheStats() {
     this.ensureQueryClient()
     const cache = this.queryClient.getQueryCache()
@@ -72,25 +64,21 @@ class CacheManager {
     }
   }
 
-  // Set cache data manually
   setCacheData(queryKey, data) {
     this.ensureQueryClient()
     this.queryClient.setQueryData(queryKey, data)
   }
 
-  // Get cache data
   getCacheData(queryKey) {
     this.ensureQueryClient()
     return this.queryClient.getQueryData(queryKey)
   }
 
-  // Remove specific cache entry
   removeCacheEntry(queryKey) {
     this.ensureQueryClient()
     this.queryClient.removeQueries({ queryKey })
   }
 
-  // Prefetch multiple summaries
   async prefetchMultipleSummaries(docIds) {
     this.ensureQueryClient()
     const prefetchPromises = docIds.map(docId => 
@@ -105,7 +93,6 @@ class CacheManager {
     }
   }
 
-  // Background refetch for active queries
   refetchActiveQueries() {
     this.ensureQueryClient()
     this.queryClient.refetchQueries({
@@ -113,7 +100,6 @@ class CacheManager {
     })
   }
 
-  // Set global cache configuration
   setGlobalConfig(config) {
     this.ensureQueryClient()
     this.queryClient.setDefaultOptions({
@@ -127,6 +113,5 @@ class CacheManager {
   }
 }
 
-// Export singleton instance
 export const cacheManager = new CacheManager()
 export default cacheManager

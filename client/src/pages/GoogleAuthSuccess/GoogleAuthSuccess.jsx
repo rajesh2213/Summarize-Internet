@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
+import { useQueryClient } from '@tanstack/react-query'
 import styles from './googleAuthSuccess.module.css'
 
 const GoogleAuthSuccess = () => {
     const [searchParams] = useSearchParams()
     const navigate = useNavigate()
-    const auth = useAuth()
+    const queryClient = useQueryClient()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
@@ -23,6 +23,12 @@ const GoogleAuthSuccess = () => {
                 }
 
                 const user = JSON.parse(decodeURIComponent(userParam))
+                
+                queryClient.setQueryData(['auth', 'status'], {
+                    isAuthenticated: true,
+                    user: user,
+                    token: token
+                })
                 
                 localStorage.setItem('accessToken', token)
                 localStorage.setItem('username', user.username)
@@ -43,7 +49,7 @@ const GoogleAuthSuccess = () => {
         }
 
         handleGoogleAuthSuccess()
-    }, [searchParams, navigate])
+    }, [searchParams, navigate, queryClient])
 
     if (loading) {
         return (

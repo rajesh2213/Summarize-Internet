@@ -41,7 +41,7 @@ authRouter.get('/google', passport.authenticate('google', {
 }));
 
 authRouter.get('/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/login' }),
+    passport.authenticate('google', { failureRedirect: `${process.env.APP_BASE_URL}/login?error=google_auth_failed` }),
     authController.googleCallback
 );
 
