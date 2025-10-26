@@ -33,7 +33,7 @@ RUN npm ci --include=dev
 
 COPY server/prisma ./prisma
 
-RUN npx prisma generate
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 RUN npm prune --production && npm cache clean --force
 
@@ -45,6 +45,7 @@ RUN adduser -S nodejs -u 1001
 
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nodejs:nodejs /app/generated ./generated
 COPY --chown=nodejs:nodejs server/ .
 
 RUN mkdir -p logs && chown nodejs:nodejs logs
