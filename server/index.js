@@ -50,6 +50,8 @@ app.use(session({
 app.use(cors({
     origin: [
         'http://localhost:5173',
+        'https://summarize-internet.vercel.app',
+        'https://summarize-internet.vercel.app/',
         'chrome-extension://*',
         'moz-extension://*',
         'safari-extension://*',
