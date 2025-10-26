@@ -51,7 +51,7 @@ COPY --chown=nodejs:nodejs server/ .
 RUN mkdir -p logs && chown nodejs:nodejs logs
 
 COPY server/scripts/start.sh ./start.sh
-RUN chmod +x ./start.sh
+RUN chmod +x ./start.sh && chown nodejs:nodejs ./start.sh
 RUN ls -la ./start.sh
 
 USER nodejs
@@ -60,4 +60,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:4000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 EXPOSE 4000
-CMD ["sh", "-c", "echo 'Running database migrations...' && npx prisma migrate deploy --schema=./prisma/schema.prisma && echo 'Database migrations completed' && node index.js"]
+CMD ["./start.sh"]
