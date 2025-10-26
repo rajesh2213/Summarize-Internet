@@ -18,20 +18,20 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 FROM base AS development
 WORKDIR /app
-COPY package*.json ./
+COPY server/package*.json ./
 RUN npm ci --only=development
-COPY . .
+COPY server/ .
 EXPOSE 4000
 CMD ["npm", "run", "dev"]
 
 FROM base AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY server/package*.json ./
 
 RUN npm cache clean --force
 RUN npm ci --include=dev
 
-COPY prisma ./prisma
+COPY server/prisma ./prisma
 
 RUN npx prisma generate
 
@@ -45,7 +45,7 @@ RUN adduser -S nodejs -u 1001
 
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-COPY --chown=nodejs:nodejs . .
+COPY --chown=nodejs:nodejs server/ .
 
 RUN mkdir -p logs && chown nodejs:nodejs logs
 

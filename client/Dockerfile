@@ -2,22 +2,22 @@ FROM node:20-alpine AS base
 
 FROM base AS development
 WORKDIR /app
-COPY package*.json ./
+COPY client/package*.json ./
 RUN npm ci
-COPY . .
+COPY client/ .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host"]
 
 FROM base AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY client/package*.json ./
 RUN npm ci
-COPY . .
+COPY client/ .
 RUN npm run build
 
 FROM nginx:alpine AS production
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY client/nginx.conf /etc/nginx/nginx.conf
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
