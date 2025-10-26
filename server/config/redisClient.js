@@ -10,7 +10,6 @@ class RedisClient {
 
     async connect() {
         try {
-            // Debug Redis configuration
             console.log('🔍 Redis Debug:');
             console.log('REDIS_URL exists:', !!process.env.REDIS_URL);
             console.log('REDIS_URL value:', process.env.REDIS_URL ? process.env.REDIS_URL.substring(0, 20) + '...' : 'undefined');
@@ -21,8 +20,16 @@ class RedisClient {
             
             if (process.env.REDIS_URL) {
                 console.log('Using REDIS_URL configuration');
+                console.log('Full REDIS_URL:', process.env.REDIS_URL);
+                
+                const redisUrl = new URL(process.env.REDIS_URL);
+                console.log('Parsed Redis URL - Host:', redisUrl.hostname, 'Port:', redisUrl.port, 'Password:', redisUrl.password ? '***' : 'none');
+                
                 redisConfig = {
-                    url: process.env.REDIS_URL,
+                    host: redisUrl.hostname,
+                    port: redisUrl.port || 6379,
+                    password: redisUrl.password || undefined,
+                    db: redisUrl.pathname ? parseInt(redisUrl.pathname.slice(1)) || 0 : 0,
                     retryDelayOnFailover: 100,
                     maxRetriesPerRequest: 3,
                     lazyConnect: true,
