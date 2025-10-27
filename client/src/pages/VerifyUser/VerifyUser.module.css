@@ -1,12 +1,16 @@
 .verifyUserContainer {
-    display: "flex";
-    justify-content: "center";
-    align-items: "center";
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
 }
 
 .successContainer {
-    display: "flex";
-    flex-direction: "column";
-    align-items: "center";
-    justify-content: "center";
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
 }
