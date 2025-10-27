@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test:pgvector": "node test-pgvector.js"
   },
   "keywords": [],
   "author": "",
@@ -43,14 +44,15 @@
     "pgvector": "^0.2.1",
     "playwright": "^1.55.0",
     "redis": "^4.7.1",
+    "@sendgrid/mail": "^8.1.3",
     "tiktoken": "^1.0.22",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
     "youtube-captions-scraper": "^2.0.3",
-    "youtube-transcript": "^1.2.1"
+    "youtube-transcript": "^1.2.1",
+    "prisma": "^6.15.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10",
-    "prisma": "^6.15.0"
+    "nodemon": "^3.1.10"
   }
 }
