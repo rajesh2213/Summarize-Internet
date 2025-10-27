@@ -106,7 +106,7 @@ const verifyUser = async (req, res, next) => {
             return res.redirect(`${process.env.APP_BASE_URL}/verify-user?status=fail&message=invalid_or_expired_token`);
         }
         if (user.isVerified) {
-            logger.info("Account is already verified", errorObj)
+            logger.info("Account is already verified")
             return res.redirect(`${process.env.APP_BASE_URL}/verify-user?status=success&message=account_already_verified`);
         }
         if (user.verificationTokenExpiresAt < Date.now()) {
