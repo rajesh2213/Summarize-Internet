@@ -23,12 +23,6 @@ const register = async (req, res, next) => {
         const verificationToken = crypto.randomBytes(32).toString('hex');
         const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-        await sendVerificationEmail({
-            email,
-            username,
-            token: verificationToken,
-        });
-
         const newUser = await authModel.createUser({
             email,
             firstName,
@@ -42,6 +36,14 @@ const register = async (req, res, next) => {
 
         res.status(201).json({ message: "User registered successfully, Please check your email to verify your account. ", user: newUser })
         logger.info(`User registered successfully [isVerified: ${newUser.isVerified}]: `, { newUser })
+
+        sendVerificationEmail({
+            email,
+            username,
+            token: verificationToken,
+        }).catch(err => {
+            logger.error(`Failed to send verification email to ${email}:`, err);
+        });
     } catch (err) {
         const errorObj = {
             errors: ["Something went wrong..."],
