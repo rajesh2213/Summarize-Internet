@@ -5,9 +5,9 @@ const logger = require('./logHandler');
 
 const sendVerificationEmail = async ({ email, username, token }) => {
     try {
-        const baseUrl = process.env.APP_BASE_URL || process.env.API_BASE_URL || 'http://localhost:4000';
+        const baseUrl = process.env.API_BASE_URL || 'http://localhost:4000';
         const verificationLink = `${baseUrl}/api/auth/verify?token=${token}`;
-
+        
         if (process.env.SENDGRID_API_KEY && process.env.EMAIL_FROM) {
             sgMail.setApiKey(process.env.SENDGRID_API_KEY);
             
