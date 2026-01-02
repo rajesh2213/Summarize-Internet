@@ -38,44 +38,59 @@ async function initializeRedis() {
 
 app.set('trust proxy', 1);
 
-app.use(cors({
+const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) {
+            console.log('[CORS] No origin header, allowing request');
             return callback(null, true);
         }
+
+        console.log(`[CORS] Checking origin: ${origin}`);
 
         const allowedOrigins = [
             'http://localhost:5173',
             'http://localhost:4000',
             'https://summarize-internet.vercel.app',
-            /^https:\/\/summarize-internet.*\.vercel\.app$/, 
         ];
 
-        const isAllowed = allowedOrigins.some(allowedOrigin => {
-            if (typeof allowedOrigin === 'string') {
-                return origin === allowedOrigin;
-            } else if (allowedOrigin instanceof RegExp) {
-                return allowedOrigin.test(origin);
-            }
-            return false;
-        });
-
-        const isExtension = /^(chrome-extension|moz-extension|safari-extension|ms-browser-extension):\/\//.test(origin);
-
-        if (isAllowed || isExtension) {
-            callback(null, true);
-        } else {
-            console.warn(`CORS blocked origin: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
+        if (allowedOrigins.includes(origin)) {
+            console.log(`[CORS] Origin allowed (exact match): ${origin}`);
+            return callback(null, true);
         }
+
+        if (/^https:\/\/summarize-internet.*\.vercel\.app$/.test(origin)) {
+            console.log(`[CORS] Origin allowed (Vercel pattern): ${origin}`);
+            return callback(null, true);
+        }
+
+        if (/^(chrome-extension|moz-extension|safari-extension|ms-browser-extension):\/\//.test(origin)) {
+            console.log(`[CORS] Origin allowed (extension): ${origin}`);
+            return callback(null, true);
+        }
+
+        console.warn(`[CORS] Blocked origin: ${origin}`);
+        callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    allowedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'X-Requested-With', 
+        'Accept', 
+        'Origin',
+        'Access-Control-Request-Method',
+        'Access-Control-Request-Headers'
+    ],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     preflightContinue: false,
-    optionsSuccessStatus: 204
-}));
+    optionsSuccessStatus: 204,
+    maxAge: 86400 
+};
+
+app.use(cors(corsOptions));
+
+app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '25mb'}));
 app.use(express.urlencoded({ extended: true}));
@@ -110,6 +125,14 @@ async function startServer() {
             timestamp: new Date().toISOString(),
             uptime: process.uptime(),
             environment: process.env.NODE_ENV || 'development'
+        });
+    });
+
+    app.get('/api/cors-test', (req, res) => {
+        res.json({
+            message: 'CORS is working',
+            origin: req.headers.origin,
+            timestamp: new Date().toISOString()
         });
     });
 
