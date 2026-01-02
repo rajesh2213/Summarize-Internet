@@ -63,18 +63,41 @@ async function startServer() {
     }));
 
     app.use(cors({
-        origin: [
-            'http://localhost:5173',
-            'https://summarize-internet.vercel.app',
-            'https://summarize-internet.vercel.app/',
-            'chrome-extension://*',
-            'moz-extension://*',
-            'safari-extension://*',
-            'ms-browser-extension://*'
-        ],
+        origin: function (origin, callback) {
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            const allowedOrigins = [
+                'http://localhost:5173',
+                'http://localhost:4000',
+                'https://summarize-internet.vercel.app',
+                /^https:\/\/summarize-internet.*\.vercel\.app$/, 
+            ];
+
+            const isAllowed = allowedOrigins.some(allowedOrigin => {
+                if (typeof allowedOrigin === 'string') {
+                    return origin === allowedOrigin;
+                } else if (allowedOrigin instanceof RegExp) {
+                    return allowedOrigin.test(origin);
+                }
+                return false;
+            });
+
+            const isExtension = /^(chrome-extension|moz-extension|safari-extension|ms-browser-extension):\/\//.test(origin);
+
+            if (isAllowed || isExtension) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+        exposedHeaders: ['Content-Range', 'X-Content-Range'],
+        preflightContinue: false,
+        optionsSuccessStatus: 204
     }))
     app.use(passport.initialize())
     app.use(passport.session())

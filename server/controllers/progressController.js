@@ -5,13 +5,30 @@ const streamProgress = async (req, res, next) => {
     const {docId} = req.params
     
     try {
-        res.writeHead(200, {
+        const origin = req.headers.origin;
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://localhost:4000',
+            'https://summarize-internet.vercel.app',
+        ];
+        const isExtension = origin && /^(chrome-extension|moz-extension|safari-extension|ms-browser-extension):\/\//.test(origin);
+        const isAllowed = !origin || allowedOrigins.includes(origin) || isExtension;
+        
+        const headers = {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
             Connection: "keep-alive",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Cache-Control"
-        })
+            "Access-Control-Allow-Headers": "Cache-Control, Content-Type"
+        };
+        
+        if (isAllowed && origin) {
+            headers["Access-Control-Allow-Origin"] = origin;
+            headers["Access-Control-Allow-Credentials"] = "true";
+        } else if (!origin) {
+            headers["Access-Control-Allow-Origin"] = "*";
+        }
+        
+        res.writeHead(200, headers)
 
         res.write(`data: ${JSON.stringify({id: docId, stage: "CONNECTED"})}\n\n`)
 
