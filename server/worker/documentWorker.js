@@ -28,6 +28,9 @@ async function claimAndProcessJob() {
         });
 
         return updated.count ? job : null;
+    }, {
+        maxWait: 10000, 
+        timeout: 30000, 
     });
 
     if (!job) return;
@@ -63,12 +66,20 @@ async function documentWorkerLoop() {
 
     await initListener('new_document', async (payload) => {
         logger.info(`[documentWorker] Notification received for document ${payload.id}`);
-        await claimAndProcessJob();
+        try {
+            await claimAndProcessJob();
+        } catch (err) {
+            logger.error(`[documentWorker] Error processing notification for document ${payload.id}:`, { errMessage: err.message, errStack: err.stack });
+        }
     });
 
     setInterval(async () => {
         logger.info("[documentWorker] Fallback polling");
-        await claimAndProcessJob();
+        try {
+            await claimAndProcessJob();
+        } catch (err) {
+            logger.error("[documentWorker] Error in fallback polling:", { errMessage: err.message, errStack: err.stack });
+        }
     }, FALLBACK_INTERVAL);
 
     logger.info("[documentWorker] Listening for new jobs...");
