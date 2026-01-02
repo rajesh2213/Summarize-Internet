@@ -188,11 +188,24 @@ async function performExtraction(jobId, url, options = {}) {
             throw new Error('No valid candidate after scoring');
         }
         
-        const { proto, isDuplicate } = await scorer.collector.savePrototype(bestCandidate.candidate.content);
-        if (isDuplicate) {
-            logger.info("Skipping save prototype, prototype similar to the current content already exists", {proto});
+        if (scorer.embedder && scorer.collector.embedFn) {
+            try {
+                const prototypeResult = await scorer.collector.savePrototype(bestCandidate.candidate.content);
+                if (prototypeResult && prototypeResult.proto) {
+                    const { proto, isDuplicate } = prototypeResult;
+                    if (isDuplicate) {
+                        logger.info("Skipping save prototype, prototype similar to the current content already exists", {proto});
+                    } else {
+                        logger.info("New prototype saved:", {proto});
+                    }
+                } else {
+                    logger.warn("savePrototype returned null or invalid result (embeddings not available), skipping prototype save");
+                }
+            } catch (prototypeError) {
+                logger.warn("Failed to save prototype, continuing anyway", { error: prototypeError.message });
+            }
         } else {
-            logger.info("New prototype saved:", {proto});
+            logger.warn("Skipping prototype save as embedder is not available");
         }
 
         await cacheService.cacheWebContent(url, bestCandidate.candidate);

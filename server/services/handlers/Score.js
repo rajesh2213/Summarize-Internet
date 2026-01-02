@@ -1,5 +1,4 @@
 const logger = require("../../config/logHandler");
-const { pipeline } = require("@xenova/transformers");
 const PrototypeCollector = require("./prototypeCollector");
 
 class Score {
@@ -34,9 +33,36 @@ class Score {
 
     async init() {
         if (!this.modelLoaded) {
-            this.embedder = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
-            this.modelLoaded = true;
-            this.collector.setEmbedder(this._embedText.bind(this));
+            try {
+                const originalEnv = process.env.SHARP_IGNORE_GLOBAL_LIBVIPS;
+                process.env.SHARP_IGNORE_GLOBAL_LIBVIPS = '1';
+                
+                try {
+                    const { pipeline } = await import("@xenova/transformers");
+                    this.embedder = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
+                    this.modelLoaded = true;
+                    this.collector.setEmbedder(this._embedText.bind(this));
+                    logger.info("Transformers initialized successfully");
+                } catch (importError) {
+                    logger.warn("Failed to import transformers, continuing without embeddings", {
+                        message: importError.message
+                    });
+                    this.modelLoaded = false;
+                } finally {
+                    if (originalEnv !== undefined) {
+                        process.env.SHARP_IGNORE_GLOBAL_LIBVIPS = originalEnv;
+                    } else {
+                        delete process.env.SHARP_IGNORE_GLOBAL_LIBVIPS;
+                    }
+                }
+            } catch (error) {
+                logger.error("Failed to initialize transformers (sharp dependency issue)", {
+                    message: error.message,
+                    stack: error.stack
+                });
+                this.modelLoaded = false;
+                logger.warn("Continuing with heuristic scoring only (no embeddings)");
+            }
         }
     }
 
@@ -174,7 +200,7 @@ class Score {
     }
 
     async _embedText(text) {
-        if (!text?.trim()) return null;
+        if (!text?.trim() || !this.embedder) return null;
 
         const cacheKey = text.length > 100 ?
             text.slice(0, 100) + `_${text.length}` : text;
@@ -222,6 +248,10 @@ class Score {
 
     async _calcDynamicScore(candidate) {
         await this.init();
+        
+        if (!this.embedder) {
+            return this._calcHeuristicScore(candidate) * 0.5;
+        }
 
         const refText = this._buildReferenceText(candidate);
         const candText = this._extractMainContent(candidate);
@@ -231,6 +261,10 @@ class Score {
             this._embedText(refText),
             this._embedText(candText),
         ]);
+
+        if (!refVec || !candVec) {
+            return this._calcHeuristicScore(candidate) * 0.5;
+        }
 
         return this._cosineSim(candVec, refVec);
     }
@@ -330,6 +364,8 @@ class Score {
 
     async _calcPrototypeScore(candidate) {
         await this.init();
+        if (!this.embedder) return 0;
+        
         const candVec = await this._getEmbeddingForCandidate(candidate);
         if (!candVec) return 0;
 
@@ -339,6 +375,8 @@ class Score {
 
     async _calcCentroidScore(candidate, allCandidates) {
         await this.init();
+        if (!this.embedder) return 0.5;
+        
         if (!allCandidates?.length || allCandidates.length < 2) return 0.5;
 
         const candVec = await this._getEmbeddingForCandidate(candidate);
