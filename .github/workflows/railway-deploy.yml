@@ -55,7 +55,6 @@ jobs:
         VITE_CLIENT_URL: ${{ secrets.VITE_CLIENT_URL }}
 
     - name: Deploy to Vercel
-      if: ${{ secrets.VERCEL_TOKEN }}
       uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -73,11 +72,11 @@ jobs:
     - name: Notify deployment status
       run: |
         if [ "${{ needs.deploy-backend.result }}" == "success" ] && [ "${{ needs.deploy-frontend.result }}" == "success" ]; then
-          echo "✅ Deployment successful!"
+          echo "Deployment successful!"
           echo "Backend: ${{ secrets.RAILWAY_BACKEND_URL }}"
           echo "Frontend: ${{ secrets.VERCEL_FRONTEND_URL }}"
         else
-          echo "❌ Deployment failed!"
+          echo "Deployment failed!"
           echo "Backend status: ${{ needs.deploy-backend.result }}"
           echo "Frontend status: ${{ needs.deploy-frontend.result }}"
         fi
