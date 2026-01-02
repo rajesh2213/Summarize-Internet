@@ -71,25 +71,69 @@ const Summary = ({ summary }) => {
                 ].filter(Boolean).join('\n');
                 
             case 'youtube':
-                const formattedTimestamps = summary.key_timestamps && Array.isArray(summary.key_timestamps) 
-                    ? summary.key_timestamps.map(ts => {
-                        if (ts.timestamp || ts.time) {
-                            return `${ts.timestamp || ts.time} - ${ts.event || ts.description || ts.title}`;
-                        }
-                        const keys = Object.keys(ts);
-                        if (keys.length > 0) {
-                            const timestamp = keys[0];
-                            const description = ts[timestamp];
-                            return `${timestamp} - ${description}`;
-                        }
-                        return String(ts);
-                    }).join('\n')
-                    : summary.key_timestamps;
+                let formattedTimestamps = '';
+                if (summary.key_timestamps) {
+                    logger.info('[Summary] key_timestamps type:', typeof summary.key_timestamps, 'value:', summary.key_timestamps);
+                    if (Array.isArray(summary.key_timestamps)) {
+                        formattedTimestamps = summary.key_timestamps.map(ts => {
+                            if (typeof ts === 'string') {
+                                return ts;
+                            }
+                            if (!ts) {
+                                return '';
+                            }
+                            if (typeof ts === 'object') {
+                                if (ts.timestamp || ts.time) {
+                                    const timeValue = ts.timestamp || ts.time;
+                                    const description = ts.event || ts.description || ts.title || ts.text || '';
+                                    return `${timeValue}${description ? ` - ${description}` : ''}`;
+                                }
+                                const keys = Object.keys(ts);
+                                if (keys.length > 0) {
+                                    const timestamp = keys[0];
+                                    const description = ts[timestamp];
+                                    if (typeof description === 'string') {
+                                        return `${timestamp} - ${description}`;
+                                    } else if (typeof description === 'object' && description !== null) {
+                                        const descText = description.text || description.description || description.event || JSON.stringify(description);
+                                        return `${timestamp} - ${descText}`;
+                                    }
+                                    return `${timestamp} - ${String(description)}`;
+                                }
+                                const objKeys = Object.keys(ts);
+                                if (objKeys.length > 0) {
+                                    return objKeys.map(key => {
+                                        const value = ts[key];
+                                        if (typeof value === 'object' && value !== null) {
+                                            return `${key}: ${JSON.stringify(value)}`;
+                                        }
+                                        return `${key}: ${value}`;
+                                    }).join(', ');
+                                }
+                                return JSON.stringify(ts);
+                            }
+                            return String(ts);
+                        }).filter(ts => ts && ts.trim() !== '').join('\n');
+                    } else if (typeof summary.key_timestamps === 'object') {
+                        const keys = Object.keys(summary.key_timestamps);
+                        formattedTimestamps = keys.map(key => {
+                            const value = summary.key_timestamps[key];
+                            if (typeof value === 'string') {
+                                return `${key} - ${value}`;
+                            } else if (typeof value === 'object' && value !== null) {
+                                return `${key} - ${JSON.stringify(value)}`;
+                            }
+                            return `${key} - ${String(value)}`;
+                        }).join('\n');
+                    } else {
+                        formattedTimestamps = String(summary.key_timestamps);
+                    }
+                }
                 
                 return [
                     summary.topic && `Topic: ${summary.topic}`,
                     summary.duration_estimate && `Duration: ${summary.duration_estimate}`,
-                    formattedTimestamps && `Key Timestamps:\n${formattedTimestamps}`
+                    formattedTimestamps && typeof formattedTimestamps === 'string' && formattedTimestamps.trim() && `Key Timestamps:\n${formattedTimestamps}`
                 ].filter(Boolean).join('\n');
                 
             case 'shopping':
