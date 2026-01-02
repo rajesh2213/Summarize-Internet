@@ -114,11 +114,10 @@ class ContentSummarizer {
             return parsed;
         } catch (err) {
             logger.error("[ContentSummarizer] summarizeChunks failed", { errMessage: err.message, errStack: err.stack });
-            const status = err.response.status;
+            const status = err.status || err.statusCode || (err.response && err.response.status);
             if (status === 429) throw new Error("Rate limited");
             if (status === 401) throw new Error("Invalid API key");
             if (status >= 500) throw new Error("OpenAI server error");
-            logger.error("[ContentSummarizer] summarizeChunks failed", { errMessage: err.message, errStack: err.stack });
             return null;
         }
     }
@@ -200,11 +199,10 @@ class ContentSummarizer {
             return resultContent
         } catch (err) {
             logger.error("[ContentSummarizer] summarize failed", { errMessage: err.message, errStack: err.stack });
-            const status = err.response.status;
+            const status = err.status || err.statusCode || (err.response && err.response.status);
             if (status === 429) throw new Error("Rate limited");
             if (status === 401) throw new Error("Invalid API key");
             if (status >= 500) throw new Error("OpenAI server error");
-            logger.error("[ContentSummarizer] summarize failed", { errMessage: err.message, errStack: err.stack });
             return null;
         }
     }
