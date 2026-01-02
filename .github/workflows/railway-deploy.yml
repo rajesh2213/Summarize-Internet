@@ -22,9 +22,7 @@ jobs:
         npm install -g @railway/cli
 
     - name: Deploy to Railway
-      run: |
-        railway login --token ${{ secrets.RAILWAY_TOKEN }}
-        railway up --service backend
+      run: railway up --service backend
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
@@ -57,6 +55,7 @@ jobs:
         VITE_CLIENT_URL: ${{ secrets.VITE_CLIENT_URL }}
 
     - name: Deploy to Vercel
+      if: ${{ secrets.VERCEL_TOKEN != '' }}
       uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
